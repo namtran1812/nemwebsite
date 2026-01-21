@@ -1492,6 +1492,49 @@
     const pageGrid = document.getElementById('pageGrid');
     const centerIcon = document.querySelector('.center-icon');
 
+    // Prefetch helper: warm up grid thumbnails and optional preview videos
+    function prefetchGridAssets() {
+        try {
+            const grid = document.getElementById('pageGrid');
+            if (!grid) return;
+            const imgs = Array.from(grid.querySelectorAll('.grid-block .static-thumb'));
+            imgs.forEach(img => {
+                const src = img.getAttribute('src');
+                if (!src) return;
+                // Add a preload link so the browser can prioritize the resource
+                const existing = document.querySelector('link[rel="preload"][href="' + src + '"]');
+                if (!existing) {
+                    const l = document.createElement('link');
+                    l.rel = 'preload';
+                    l.as = 'image';
+                    l.href = src;
+                    document.head.appendChild(l);
+                }
+                // Also warm the image cache by creating an Image
+                const im = new Image();
+                im.src = src;
+                // If the static-thumb uses lazy loading, set it to eager so download starts
+                try { img.loading = 'eager'; } catch(e) {}
+            });
+
+            // Prefetch any preview videos referenced via data-video
+            const blocks = Array.from(grid.querySelectorAll('.grid-block'));
+            blocks.forEach(b => {
+                const v = b.dataset.video;
+                if (!v) return;
+                // Add a preload link for the video; use as=video
+                const existingV = document.querySelector('link[rel="preload"][href="' + v + '"]');
+                if (!existingV) {
+                    const lv = document.createElement('link');
+                    lv.rel = 'preload';
+                    lv.as = 'video';
+                    lv.href = v;
+                    document.head.appendChild(lv);
+                }
+            });
+        } catch (e) { console.debug('prefetchGridAssets error', e); }
+    }
+
         // early handle for background video
         const backgroundVideo = document.getElementById('background-video');
         // Lazy-load video sources after first paint to avoid blocking initial render
@@ -1626,6 +1669,9 @@
         console.log('showSmile() called');
         // New behavior: slide the avatar/icon to the left and reveal a static 2x3 grid
         blocksVisible = true;
+
+        // Start prefetching grid assets immediately so thumbnails load while avatar slides
+        try { prefetchGridAssets(); } catch(e) { console.debug('prefetch failed', e); }
 
         // Stop typing animation immediately (safe fallback if `fullText` is missing)
         try {
