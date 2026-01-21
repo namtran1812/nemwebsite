@@ -1208,8 +1208,9 @@
     <div class="movie-intro-left" id="movieIntroLeft"></div>
     <div class="movie-intro-right" id="movieIntroRight"></div>
 
-    <video id="background-video" autoplay muted loop playsinline>
-        <source src="images/homeimages/homebackground.mp4" type="video/mp4">
+    <!-- Background video: lazy-load sources after first paint to improve initial load -->
+    <video id="background-video" muted loop playsinline poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==">
+        <!-- sources appended by JS to avoid blocking initial render -->
         Your browser does not support the video tag.
     </video>
     <!-- Persistent cross-fade overlay used during navigation to avoid video pop/flash -->
@@ -1469,8 +1470,27 @@
     const pageGrid = document.getElementById('pageGrid');
     const centerIcon = document.querySelector('.center-icon');
 
-    // early handle for background video
-    const backgroundVideo = document.getElementById('background-video');
+        // early handle for background video
+        const backgroundVideo = document.getElementById('background-video');
+        // Lazy-load video sources after first paint to avoid blocking initial render
+        (function() {
+            try {
+                if (!backgroundVideo) return;
+                window.requestAnimationFrame(() => {
+                    const s1 = document.createElement('source');
+                    s1.src = 'images/homeimages/homebackground.webm';
+                    s1.type = 'video/webm';
+                    const s2 = document.createElement('source');
+                    s2.src = 'images/homeimages/homebackground.mp4';
+                    s2.type = 'video/mp4';
+                    backgroundVideo.appendChild(s1);
+                    backgroundVideo.appendChild(s2);
+                    // start loading and attempt autoplay (silent) if allowed
+                    backgroundVideo.load();
+                    backgroundVideo.play().catch(()=>{});
+                });
+            } catch(e) { console.debug('video lazy-load error', e); }
+        })();
 
     // Bubble text typing state and helper (restore typing behavior)
     const fullText = "welcome to my world.\nplease click on me to explore more about myself.";
