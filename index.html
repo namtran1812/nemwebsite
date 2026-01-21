@@ -228,9 +228,11 @@
         }
 
         .center-icon img {
-            max-width: 75vw;
-            max-height: 75vh;
-            width: auto;
+            /* Prevent upscaling: prefer a responsive width but cap at the largest
+               available source (720px). On small screens the image will shrink.
+               This avoids the browser upscaling smaller variants and producing blur. */
+            width: min(450px, 40vw);
+            max-width: 100%;
             height: auto;
             object-fit: contain;
             z-index: 20;
