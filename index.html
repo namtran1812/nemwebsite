@@ -12,6 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Ballet&display=swap" rel="stylesheet">
     <!-- Preload poster for faster Largest Contentful Paint (LCP) -->
     <link rel="preload" as="image" href="/images/homeimages/homebackground-poster.jpg">
+    <!-- Preload primary avatar WebP so it's available quickly for LCP / first interaction -->
+    <link rel="preload" as="image" href="/images/homeimages/fullbodyicon-360.webp" type="image/webp">
     <style>
         * {
             margin: 0;
@@ -1277,10 +1279,23 @@
             <div class="head-lotus head-lotus-between-1-2"></div>
             <div class="head-lotus head-lotus-between-4-5"></div>
             
-            <img class="avatar-normal" src="images/homeimages/fullbodyiconclosed-transparent.png" alt="Nems Character">
-            <img class="avatar-closed" src="images/homeimages/fullbodyiconclosed-transparent.png" alt="Nems Character Closed">
-            <img class="avatar-smile hidden" src="images/homeimages/fullbodyiconsmile-transparent.png" alt="Nems Character Smile">
-            <img class="avatar-smile-closed hidden" src="images/homeimages/fullbodyiconsmileclosed-transparent.png" alt="Nems Character Smile Closed">
+            <!-- Avatar images: use WebP first with PNG fallbacks, and include width/height to avoid layout shift -->
+            <picture class="avatar-normal">
+                <source srcset="images/homeimages/fullbodyicon-360.webp" type="image/webp">
+                <img src="images/homeimages/fullbodyiconclosed-transparent.png" alt="Nems Character" width="360" height="450" loading="eager">
+            </picture>
+            <picture class="avatar-closed">
+                <source srcset="images/homeimages/fullbodyiconclosed-360.webp" type="image/webp">
+                <img src="images/homeimages/fullbodyiconclosed-transparent.png" alt="Nems Character Closed" width="360" height="450" loading="eager">
+            </picture>
+            <picture class="avatar-smile hidden">
+                <source srcset="images/homeimages/fullbodyiconsmile-360.webp" type="image/webp">
+                <img src="images/homeimages/fullbodyiconsmile-transparent.png" alt="Nems Character Smile" width="360" height="450" loading="lazy">
+            </picture>
+            <picture class="avatar-smile-closed hidden">
+                <source srcset="images/homeimages/fullbodyiconsmileclosed-360.webp" type="image/webp">
+                <img src="images/homeimages/fullbodyiconsmileclosed-transparent.png" alt="Nems Character Smile Closed" width="360" height="450" loading="lazy">
+            </picture>
             
             <div class="content-container">
                 <div class="bubble-text" id="bubble-text"></div>
