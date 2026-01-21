@@ -70,6 +70,16 @@
             z-index: -1;
         }
 
+        /* Emergency: hide intro panels/overlay if they become stuck due to JS errors
+           This ensures the main page content is visible even when scripts fail. */
+        .movie-intro-left, .movie-intro-right, #intro-overlay, .movie-intro-overlay {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            z-index: 0 !important;
+        }
+
         /* Background video expands off-screen to avoid revealing gaps during small transforms/parallax */
         video#background-video {
             position: fixed;
