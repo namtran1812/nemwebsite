@@ -1477,12 +1477,14 @@
             try {
                 if (!backgroundVideo) return;
                 window.requestAnimationFrame(() => {
-                    const s1 = document.createElement('source');
-                    s1.src = 'images/homeimages/homebackground.webm';
-                    s1.type = 'video/webm';
-                    const s2 = document.createElement('source');
-                    s2.src = 'images/homeimages/homebackground.mp4';
-                    s2.type = 'video/mp4';
+                        const s1 = document.createElement('source');
+                        // optimized WebM (720p)
+                        s1.src = 'images/homeimages/homebackground-720.webm';
+                        s1.type = 'video/webm';
+                        const s2 = document.createElement('source');
+                        // optimized H.264 MP4 (720p, faststart)
+                        s2.src = 'images/homeimages/homebackground-720.mp4';
+                        s2.type = 'video/mp4';
                     backgroundVideo.appendChild(s1);
                     backgroundVideo.appendChild(s2);
                     // start loading and attempt autoplay (silent) if allowed
