@@ -8,12 +8,26 @@
     <!-- Resource hints: speed up font loading -->
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Ballet&display=swap" rel="stylesheet">
+    <!-- Load fonts with preload pattern to avoid FOIT: preload the stylesheet then apply onload -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" as="style" onload="this.rel='stylesheet'">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Ballet&display=swap" as="style" onload="this.rel='stylesheet'">
+    <noscript>
+        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Ballet&display=swap" rel="stylesheet">
+    </noscript>
     <!-- Preload poster for faster Largest Contentful Paint (LCP) -->
     <link rel="preload" as="image" href="/images/homeimages/homebackground-poster.jpg">
-    <!-- Preload primary avatar WebP so it's available quickly for LCP / first interaction -->
+    <!-- Preload avatars (360 + 720) for faster initial paint and interactions -->
     <link rel="preload" as="image" href="/images/homeimages/fullbodyicon-360.webp" type="image/webp">
+    <link rel="preload" as="image" href="/images/homeimages/fullbodyicon-720.webp" type="image/webp">
+
+    <!-- Preload grid thumbnails (these are lightweight) -->
+    <link rel="preload" as="image" href="/images/aboutmeimages/saigon.png">
+    <link rel="preload" as="image" href="/images/internshipimages/tech.png">
+    <link rel="preload" as="image" href="/images/leadershipimages/uf.png">
+    <link rel="preload" as="image" href="/images/technicalimages/code.png">
+    <link rel="preload" as="image" href="/images/creativeimages/creative.png">
+    <link rel="preload" as="image" href="/images/questionsimages/questions.png">
     <style>
         * {
             margin: 0;
@@ -1218,7 +1232,7 @@
     <div class="movie-intro-right" id="movieIntroRight"></div>
 
     <!-- Background video: lazy-load sources after first paint to improve initial load -->
-    <video id="background-video" muted loop playsinline poster="images/homeimages/homebackground-poster.jpg">
+    <video id="background-video" muted loop playsinline poster="images/homeimages/homebackground-poster.jpg" preload="metadata">
         <!-- sources appended by JS to avoid blocking initial render -->
         Your browser does not support the video tag.
     </video>
@@ -1492,49 +1506,6 @@
     const pageGrid = document.getElementById('pageGrid');
     const centerIcon = document.querySelector('.center-icon');
 
-    // Prefetch helper: warm up grid thumbnails and optional preview videos
-    function prefetchGridAssets() {
-        try {
-            const grid = document.getElementById('pageGrid');
-            if (!grid) return;
-            const imgs = Array.from(grid.querySelectorAll('.grid-block .static-thumb'));
-            imgs.forEach(img => {
-                const src = img.getAttribute('src');
-                if (!src) return;
-                // Add a preload link so the browser can prioritize the resource
-                const existing = document.querySelector('link[rel="preload"][href="' + src + '"]');
-                if (!existing) {
-                    const l = document.createElement('link');
-                    l.rel = 'preload';
-                    l.as = 'image';
-                    l.href = src;
-                    document.head.appendChild(l);
-                }
-                // Also warm the image cache by creating an Image
-                const im = new Image();
-                im.src = src;
-                // If the static-thumb uses lazy loading, set it to eager so download starts
-                try { img.loading = 'eager'; } catch(e) {}
-            });
-
-            // Prefetch any preview videos referenced via data-video
-            const blocks = Array.from(grid.querySelectorAll('.grid-block'));
-            blocks.forEach(b => {
-                const v = b.dataset.video;
-                if (!v) return;
-                // Add a preload link for the video; use as=video
-                const existingV = document.querySelector('link[rel="preload"][href="' + v + '"]');
-                if (!existingV) {
-                    const lv = document.createElement('link');
-                    lv.rel = 'preload';
-                    lv.as = 'video';
-                    lv.href = v;
-                    document.head.appendChild(lv);
-                }
-            });
-        } catch (e) { console.debug('prefetchGridAssets error', e); }
-    }
-
         // early handle for background video
         const backgroundVideo = document.getElementById('background-video');
         // Lazy-load video sources after first paint to avoid blocking initial render
@@ -1553,11 +1524,37 @@
                     backgroundVideo.appendChild(s1);
                     backgroundVideo.appendChild(s2);
                     // start loading and attempt autoplay (silent) if allowed
-                    backgroundVideo.load();
+                        backgroundVideo.load();
+                        // ensure we only download the metadata initially — full downloads happen when play is allowed
+                        try { backgroundVideo.preload = 'metadata'; } catch(e){}
                     backgroundVideo.play().catch(()=>{});
                 });
             } catch(e) { console.debug('video lazy-load error', e); }
         })();
+
+        // After idle, prefetch the actual video files in the background so clicking/transition is snappy
+        try {
+            if ('requestIdleCallback' in window) {
+                requestIdleCallback(() => {
+                    const link1 = document.createElement('link');
+                    link1.rel = 'prefetch';
+                    link1.href = 'images/homeimages/homebackground-720.webm';
+                    link1.as = 'video';
+                    document.head.appendChild(link1);
+
+                    const link2 = document.createElement('link');
+                    link2.rel = 'prefetch';
+                    link2.href = 'images/homeimages/homebackground-720.mp4';
+                    link2.as = 'video';
+                    document.head.appendChild(link2);
+                }, {timeout: 2000});
+            } else {
+                setTimeout(() => {
+                    const link1 = document.createElement('link'); link1.rel = 'prefetch'; link1.href = 'images/homeimages/homebackground-720.webm'; link1.as = 'video'; document.head.appendChild(link1);
+                    const link2 = document.createElement('link'); link2.rel = 'prefetch'; link2.href = 'images/homeimages/homebackground-720.mp4'; link2.as = 'video'; document.head.appendChild(link2);
+                }, 2000);
+            }
+        } catch(e) { console.debug('prefetch setup error', e); }
 
     // Bubble text typing state and helper (restore typing behavior)
     const fullText = "welcome to my world.\nplease click on me to explore more about myself.";
@@ -1669,9 +1666,6 @@
         console.log('showSmile() called');
         // New behavior: slide the avatar/icon to the left and reveal a static 2x3 grid
         blocksVisible = true;
-
-        // Start prefetching grid assets immediately so thumbnails load while avatar slides
-        try { prefetchGridAssets(); } catch(e) { console.debug('prefetch failed', e); }
 
         // Stop typing animation immediately (safe fallback if `fullText` is missing)
         try {
