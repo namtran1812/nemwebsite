@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Me - Nems Website</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ballet&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+               background-color: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            padding: 20px 20px;
+            /* page-level scrolling disabled so only the content block scrolls */
+            overflow: hidden;
+            position: relative;
+            cursor: url('images/homeimages/cursor.png') 42 42, pointer;
+        }
+
+        /* Ensure the bub cursor is applied globally and not overridden by nested elements */
+        * { cursor: url('images/homeimages/cursor.png') 42 42, pointer !important; }
+
+        /* Page root gets grayscale/blur animations so fixed UI (like audio control)
+           can sit outside and remain visible/colored even when page is BW */
+        :root {
+            --bar-slide-duration: 1.2s;
+            --bar-slide-ease: ease-in-out;
+            /* visible width for the persistent bars (user requested 180px) */
+            --bar-width: 180px; /* was 220px */
+            --bar-overhang: 60px; /* how much the bar extends past the viewport edge */
+            --bar-total: calc(var(--bar-width) + var(--bar-overhang));
+        }
+
+        .page-root {
+            width: 100%;
+            min-height: 100vh;
+            /* Show page in full color by default (disable black-and-white state) */
+            filter: none;
+            transition: filter 0.8s ease-in-out;
+        }
+
+        /* color-mode is still accepted by scripts but is a no-op visually */
+        .page-root.color-mode {
+            filter: none;
+        }
+
+    .background-video {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        /* Cover the viewport so the video always fills the screen (may crop to maintain aspect ratio) */
+        object-fit: cover;
+        object-position: center center;
+        z-index: -1;
+        transform-origin: center center;
+        /* Keep the video at its intended scale; parallax will translate only */
+        transform: translate(0,0);
+        filter: blur(0px) grayscale(0%);
+        transition: opacity 520ms ease-in-out, filter 0.2s ease-in-out, transform 0.2s ease;
+        opacity: 1;
+    }
+
+    /* (Removed blurred background layer per user request) */
+
+            /* .page-root.color-mode continues to be supported but has no visual change */
+            .page-root.color-mode .background-video {
+                filter: blur(0px) grayscale(0%);
+            }
+
+            /* Allow the background video to be toggled to color even when it sits outside .page-root
+               by giving it a class. This is useful because the video element is placed before
+               the .page-root wrapper and can't be selected with a parent selector. */
+            .background-video.color {
+                filter: blur(0px) grayscale(0%);
+            }
+
+            /* overlay removed so the background video is shown without a black tint */
+            .page-root .overlay {
+                position: fixed;
+                /* expand off-screen to match the movie intro bars and avoid visible gaps */
+                top: -6vh;
+                left: calc(-1 * var(--bar-overhang));
+                right: calc(-1 * var(--bar-overhang));
+                height: calc(100vh + 12vh);
+                background: transparent; /* no tint */
+                z-index: 5; /* sit above the video but below content (content uses z-index >=20) */
+                pointer-events: none; /* allow clicks to pass through */
+                transition: background 0.3s ease-in-out;
+            }
+
+            /* Ensure other elements also remove grayscale when page-root.color-mode is active */
+            .page-root.color-mode .content-block,
+            .page-root.color-mode .header,
+            .page-root.color-mode .avatar-about {
+                filter: none;
+            }
+
+            .page-root.color-mode .avatar-about-closed {
+                filter: none;
+            }
+
+        @keyframes blurToClean {
+            /* preserve grayscale during the blur->clean animation so elements
+               that rely on .page-root's grayscale don't briefly flash to color */
+            0% {
+                filter: blur(15px) grayscale(0%);
+                opacity: 1;
+            }
+            100% {
+                filter: blur(0px) grayscale(0%);
+                opacity: 1;
+            }
+        }
+
+        @keyframes closingBlur {
+            /* keep grayscale during the closing blur so the visual state is consistent */
+            0% {
+                filter: blur(0px) grayscale(0%);
+            }
+            100% {
+                filter: blur(15px) grayscale(0%);
+            }
+        }
+
+        @keyframes openLeft {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(calc(-100vw - var(--bar-total)));
+                opacity: 1;
+            }
+        }
+
+        @keyframes openRight {
+            0% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(calc(100vw + var(--bar-total)));
+                opacity: 1;
+            }
+        }
+
+        @keyframes closeLeft {
+            0% {
+                transform: translateX(calc(-100vw - var(--bar-total)));
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes closeRight {
+            0% {
+                transform: translateX(calc(100vw + var(--bar-total)));
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .header h1 {
+            font-family: 'Press Start 2P', cursive;
+            color: #E78FA5;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Movie intro effect (match homepage geometry) */
+        .movie-intro-overlay {
+            position: fixed;
+            top: -6vh;
+            left: calc(-1 * var(--bar-overhang));
+            width: calc(100% + (var(--bar-overhang) * 2));
+            height: calc(100vh + 12vh);
+            background-color: #000;
+            z-index: 9999;
+            animation: movieIntroOpen 2.5s ease-in-out forwards;
+            pointer-events: none;
+        }
+
+        .movie-intro-left {
+            position: fixed;
+            top: -6vh;
+            left: calc(-1 * var(--bar-overhang));
+            width: calc(50% + var(--bar-overhang));
+            height: calc(100vh + 12vh);
+            background-color: #000;
+            z-index: 9998;
+            animation: openLeft 2.5s ease-in-out forwards;
+            pointer-events: none;
+            transition: transform var(--bar-slide-duration) var(--bar-slide-ease);
+            will-change: transform;
+        }
+
+        .movie-intro-left.active {
+            transform: translateX(-100%);
+            animation: none;
+        }
+
+        .movie-intro-left.closing {
+            animation: closeLeft 2.5s ease-in-out forwards;
+        }
+
+        .movie-intro-left.slide-out {
+            transform: translateX(calc(-100vw - var(--bar-total))) !important;
+        }
+
+        .movie-intro-right {
+            position: fixed;
+            top: -6vh;
+            right: calc(-1 * var(--bar-overhang));
+            width: calc(50% + var(--bar-overhang));
+            height: calc(100vh + 12vh);
+            background-color: #000;
+            z-index: 9998;
+            animation: openRight 2.5s ease-in-out forwards;
+            pointer-events: none;
+            transition: transform var(--bar-slide-duration) var(--bar-slide-ease);
+            will-change: transform;
+        }
+
+        .movie-intro-right.active {
+            transform: translateX(100%);
+            animation: none;
+        }
+
+        /* Add persistent vertical frame bars like the homepage */
+        .container::before,
+        .container::after {
+            content: '';
+            position: fixed;
+            top: -6vh;
+            /* collapse by default so no visible bars */
+            width: 0;
+            height: calc(100vh + 12vh);
+            background-color: transparent; /* no black bars */
+            z-index: 100; /* placeholder stacking */
+            transition: width 0.6s ease-in-out;
+            pointer-events: none;
+        }
+
+        .container::before {
+            left: calc(-1 * var(--bar-overhang));
+            /* shift the bar outward so its outer edge extends past the viewport */
+        }
+
+        .container::after {
+            right: calc(-1 * var(--bar-overhang));
+            /* shift the bar outward so its outer edge extends past the viewport */
+        }
+
+        /* Persistent bars are disabled on this page; color-mode rules are no-ops here. */
+        .page-root.color-mode .container::before,
+        .page-root.color-mode .container::after {
+            width: 0;
+        }
+
+        .movie-intro-right.closing {
+            animation: closeRight 2.5s ease-in-out forwards;
+        }
+
+        .movie-intro-right.slide-out {
+            transform: translateX(calc(100vw + var(--bar-total))) !important;
+        }
+
+        /* Ballet 'About Me' decorative label that overlaps the content block
+           It sits after the .content-block in the DOM so we can reveal it when the
+           content block has the .active class. */
+        .about-me-ballet {
+            position: absolute;
+            top: calc(120px - 40px); /* slightly above the content block top (moved up) */
+            left: 200px; /* moved a bit left from previous position */
+            margin-right: 40px;
+            font-family: 'Ballet', 'Brush Script MT', cursive;
+            font-size: 56px;
+            color: #fff;
+            z-index: 60; /* above the content block (which is z-index:50) */
+            pointer-events: none;
+            text-transform: none;
+            letter-spacing: 0.5px;
+            /* Layered text-shadows for depth and legibility */
+            text-shadow:
+                0 1px 0 rgba(255,255,255,0.03), /* tiny highlight to make edges pop */
+                0 2px 2px rgba(0,0,0,0.36),    /* near shadow for crispness */
+                0 8px 20px rgba(0,0,0,0.6);    /* soft large shadow for depth */
+            /* subtle drop-shadow filter to improve separation from video backgrounds */
+            filter: drop-shadow(0 10px 24px rgba(0,0,0,0.28));
+            -webkit-font-smoothing: antialiased;
+            opacity: 0;
+            /* start off-screen (match the content-block initial translateX) */
+            transform: translateX(-100vw) translateY(0);
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out, text-shadow 0.45s ease;
+        }
+
+        /* When the content block is active, reveal the Ballet label and nudge it right */
+        .content-block.active ~ .about-me-ballet {
+            opacity: 1;
+                /* animate to the content-block final translate (6vw) plus a slightly reduced extra offset,
+                    and nudge up a bit so the label sits higher. */
+                transform: translateX(calc(6vw + 25vw)) translateY(-1.2vh);
+        }
+
+        @keyframes movieIntroOpen {
+            0% {
+                opacity: 1;
+                clip-path: inset(0);
+            }
+            100% {
+                opacity: 0;
+                clip-path: inset(0 0 0 0);
+            }
+        }
+
+        .dropdown-menu {
+            position: fixed;
+            top: 3px;
+            left: 20px;
+            z-index: 100;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Audio control (copied from index.html) */
+        /* audio control UI removed - audio elements remain for passive playback */
+
+        .dropdown-button {
+            background-color: transparent;
+            background-image: url('images/homeimages/fullcloud.png');
+            background-size: 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #E78FA5;
+            padding: 60px 80px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            border: none;
+            cursor: url('images/homeimages/cursor.png') 42 42, pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
+            animation: float 3s ease-in-out infinite;
+            display: block; /* show button by default */
+        }
+
+        /* Show the button after avatar click */
+        .dropdown-menu.visible .dropdown-button {
+            display: block;
+        }
+
+        .dropdown-button:hover {
+            background-color: transparent;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-image: url('images/dropdowncloud.png');
+            background-size: 153%;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-width: 150px;
+            padding: 45px 25px 50px 25px;
+            z-index: 1;
+            border-radius: 5px;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
+        }
+
+        .dropdown-content a {
+            color: #333;
+            padding: 7px 0;
+            margin: 0 auto;
+            text-decoration: none;
+            display: block;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            line-height: 10px;
+            text-align: center;
+            transition: color 0.3s ease;
+            cursor: url('images/homeimages/cursor.png') 42 42, pointer;
+        }
+
+        .dropdown-content a:hover {
+            color: #E78FA5;
+        }
+
+        .dropdown-content a.active {
+            color: #E78FA5;
+            font-weight: bold;
+        }
+
+        .dropdown-menu.menu-open .dropdown-content {
+            display: block;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 4vh;
+            width: 100%;
+            height: 100%;
+            position: relative; /* ensure absolutely positioned Ballet label is relative to this container */
+        }
+
+        .center-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            padding: 40px; /* match homepage spacing so avatar sits at same vertical position */
+        }
+
+        .center-icon img {
+            max-width: 75vw;
+            max-height: 75vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            z-index: 20; /* match homepage avatar stacking */
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .avatar-about {
+            cursor: url('images/homeimages/cursor.png') 42 42, pointer;
+            animation: aboutBlink 2.8s infinite, float 3s ease-in-out infinite;
+            animation-delay: 0s, 0s;
+            z-index: 20; /* align with homepage avatar stacking */
+            position: relative;
+            filter: grayscale(100%);
+            transition: filter 0.8s ease-in-out, opacity 0.2s ease-in-out;
+        }
+
+        .avatar-about-closed {
+            position: absolute;
+            max-width: 75vw;
+            max-height: 75vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            z-index: 20; /* align with homepage avatar stacking */
+            cursor: url('images/homeimages/cursor.png') 42 42, pointer;
+            animation: aboutClosedBlink 2.8s infinite, float 3s ease-in-out infinite;
+            animation-delay: 0s, 0s;
+            filter: grayscale(100%);
+            transition: filter 0.8s ease-in-out, opacity 0.2s ease-in-out;
+        }
+
+        @keyframes aboutBlink {
+            0% { opacity: 1; }
+            71.43% { opacity: 1; }
+            71.5% { opacity: 0; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes aboutClosedBlink {
+            0% { opacity: 0; }
+            71.43% { opacity: 0; }
+            71.5% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+
+        @keyframes slideAvatarRight {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(40vw); }
+        }
+
+        @keyframes slideContentIn {
+            0% { transform: translateX(-100vw); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideAvatarBack {
+            0% { transform: translateX(40vw); }
+            100% { transform: translateX(0); }
+        }
+
+        @keyframes slideContentOut {
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(-100vw); opacity: 0; }
+        }
+
+        .center-icon {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            width: 100%;
+        }
+
+        .avatar-container {
+            position: relative;
+            z-index: 100;
+            transition: transform 0.8s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .avatar-container.shifted {
+            /* move the avatar slightly further right when expanded (small nudge)
+               Keeping the spacing between avatar and content block consistent. */
+            transform: translateX(28vw);
+        }
+
+        .content-block {
+            position: fixed;
+            left: 0;
+            top: 120px; /* moved down slightly */
+            width: 65vw;
+            /* make content block shorter so it doesn't stretch full page height */
+            height: 70vh;
+                    /* Solid black tint for the entire content block (no gradient) with
+                        a tiled grain overlay that multiplies over the black tint. */
+                    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.36'/></filter><rect width='100%' height='100%' fill='black' filter='url(%23n)'/></svg>");
+                    background-repeat: repeat;
+                    background-size: 120px 120px;
+                    background-position: 0 0;
+                    background-color: rgba(0,0,0,0.72);
+                    background-blend-mode: multiply;
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 24px 32px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+            overscroll-behavior: contain; /* prevent scroll chaining to the page */
+            overflow-x: hidden;
+            z-index: 50;
+            opacity: 0;
+            transform: translateX(-100vw);
+            transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+            color: #d0d0d0;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            line-height: 1.8;
+            letter-spacing: 0.3px;
+            /* Keep edges sharp and add subtle inner sheen and drop shadow to simulate glass
+               without using backdrop-filter (no blur applied to the video). */
+            border-radius: 12px;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.02);
+            background-clip: padding-box;
+            /* keep vertical scrolling enabled; only hide horizontal overflow for sheen */
+            overflow-x: hidden;
+            scrollbar-width: none;
+        }
+
+        /* Subtle sheen overlay to emulate a glossy glass surface (no blur) */
+        .content-block::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            /* subtle sheen; lower opacity so the dark tint remains visible */
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+            mix-blend-mode: overlay;
+            opacity: 0.6;
+            /* place the sheen behind the content */
+            z-index: 0;
+        }
+
+        /* Ensure text and interactive elements inside the content block render above the sheen */
+        .content-block * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Matte / grain overlay to give the content block a subtle textured (matte) appearance */
+          /* grain now applied as a background layer on the .content-block itself so it
+              consistently covers the entire scrollable area. */
+
+        /* side image removed - no styles needed */
+
+        .content-block::-webkit-scrollbar {
+            display: none;
+        }
+
+        .content-block.active {
+            opacity: 1;
+            /* shift the content block by the same small nudge so the gap remains unchanged */
+            transform: translateX(8vw);
+        }
+
+        .content-block h2 {
+            font-size: 12px;
+            font-weight: 400;
+            margin-bottom: 20px;
+            color: #E78FA5;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #E78FA5;
+            padding-bottom: 10px;
+        }
+
+        .content-block h3 {
+            font-size: 10px;
+            font-weight: 400;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            color: #E78FA5;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #E78FA5;
+            padding-bottom: 8px;
+        }
+
+        .content-block p {
+            margin-bottom: 12px;
+            text-align: left;
+            opacity: 0.95;
+            background: rgba(231, 143, 165, 0.05);
+            padding: 10px 12px;
+            border-left: 2px solid #E78FA5;
+        }
+
+        .content-block p strong {
+            color: #E78FA5;
+            font-weight: 600;
+        }
+
+        .content-block ul {
+            margin-left: 0;
+            margin-bottom: 8px;
+            list-style: none;
+            background: transparent;
+            padding: 12px 0;
+            border-left: none;
+        }
+
+        .content-block li:last-child {
+            margin-bottom: 0;
+        }
+
+        .content-section {
+            background: transparent;
+            border: none;
+            padding: 8px 0;
+            margin-bottom: 8px;
+        }
+
+        /* Scroll reveal / dropdown animation: headings and sections animate in as they enter
+           the visible area of the #contentBlock scroll container. Prefers-reduced-motion respected. */
+        .content-block h2,
+        .content-block h3,
+        .content-section {
+            will-change: transform, opacity;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: transform 420ms cubic-bezier(.2,.8,.2,1), opacity 420ms ease;
+        }
+
+        .content-block h2.visible,
+        .content-block h3.visible,
+        .content-section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .content-block h2,
+            .content-block h3,
+            .content-section { transition: none !important; transform: none !important; opacity: 1 !important; }
+        }
+
+        /* Subtle pink tint glow on hover/focus for each content section (no lift) */
+        .content-section {
+            display: block;
+            width: 100%;
+            position: relative;
+            pointer-events: auto;
+            padding: 12px 8px;
+            transition: transform 420ms cubic-bezier(.2,.8,.2,1), opacity 420ms ease, background 220ms ease, box-shadow 220ms ease;
+        }
+
+        /* Only show the hover glow for sections that have been revealed */
+        .content-section.visible:hover,
+        .content-section.visible:focus-within {
+            /* brighter pink tint */
+            background: linear-gradient(180deg, rgba(231,143,165,0.14), rgba(231,143,165,0.06));
+            box-shadow: 0 18px 48px rgba(231,143,165,0.16), inset 0 0 0 1px rgba(231,143,165,0.12);
+            border-radius: 8px;
+            cursor: default;
+        }
+
+        /* Make sections keyboard-focusable appearance accessible (brighter) */
+        .content-section.visible:focus-within {
+            outline: 2px solid rgba(231,143,165,0.26);
+            outline-offset: 4px;
+        }
+
+        .content-section p {
+            background: transparent;
+            border: none;
+            padding: 5px 0;
+            margin-bottom: 8px;
+        }
+
+        .content-section p:last-child {
+            margin-bottom: 0;
+        }
+
+        .content-section ul {
+            background: transparent;
+            border: none;
+            padding: 0 0 0 15px;
+            margin-bottom: 0;
+        }
+
+        .content-block li {
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 15px;
+            font-size: 8px;
+        }
+
+        .content-block li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #E78FA5;
+        }
+        /* ---------- Glassmorphism (About page only) ---------- */
+        /* Apply a subtle frosted glass effect to the main content areas
+           while explicitly excluding avatar, dropdown menu, and audio UI */
+        /* Apply card styling to header and content-sections but do NOT blur them. */
+        .page-root .content-section,
+        .page-root .header {
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+            border-radius: 10px;
+        }
+
+        /* Content block: confined frosted-glass effect. This applies backdrop blur
+           only inside the card area so the page/video edges remain sharp. */
+        .page-root .content-block {
+            backdrop-filter: blur(6px) saturate(115%);
+            -webkit-backdrop-filter: blur(6px) saturate(115%);
+        }
+
+        /* Keep avatar, dropdown, and audio controls visually intact (no blur/glass) */
+        .avatar-about,
+        .avatar-about-closed,
+        .dropdown-menu,
+        .audio-control,
+        .audio-control * {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            filter: none !important;
+            box-shadow: none !important;
+            background: none !important;
+        }
+
+        /* Slight spacing and rounding adjustments to blend with glass style */
+        .content-block {
+            padding: 24px 32px; /* a touch more padding for card-like feel */
+            border-radius: 12px;
+        }
+
+        .content-section {
+            padding: 12px 10px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+        }
+
+    </style>
+</head>
+<body>
+    <!-- Foreground Background Video (sharp, slightly zoomed) -->
+    <video class="background-video" autoplay muted loop playsinline>
+        <source src="images/aboutmeimages/aboutmebackground.mp4?v=6" type="video/mp4">
+    </video>
+
+    <script>
+    // If we were navigated from the homepage, run a coordinated fade-in of the background videos
+    (function coordinatedEntry() {
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            if (params.get('from') !== 'home') return; // nothing to do
+
+            const fg = document.querySelector('.background-video');
+            if (!fg) return;
+
+            // Start with video invisible and then fade it in. Do not change avatar visibility.
+            fg.style.opacity = '0';
+
+            // Ensure video is ready before fading in so there's no flash of black
+            const whenReady = new Promise(resolve => { if (fg.readyState >= 2) resolve(); else fg.addEventListener('loadeddata', resolve, { once: true }); });
+
+            whenReady.then(() => {
+                // Fade in foreground video and then hide the crossfade overlay
+                fg.style.transition = 'opacity 520ms ease-in-out';
+                fg.style.opacity = '1';
+                // After foreground fades in, hide the crossfade overlay left by the previous page
+                setTimeout(() => {
+                    try { const overlay = document.getElementById('crossfade-overlay'); if (overlay) overlay.style.opacity = '0'; } catch(e) {}
+                    // Remove the query param from history so reloading doesn't retrigger
+                    try { const url = new URL(window.location.href); url.searchParams.delete('from'); window.history.replaceState({}, '', url.toString()); } catch(e) {}
+                }, 560);
+            }).catch(() => {
+                fg.style.opacity = '1';
+                try { const overlay = document.getElementById('crossfade-overlay'); if (overlay) overlay.style.opacity = '0'; } catch(e) {}
+            });
+        } catch (e) { console.debug('coordinatedEntry error', e); }
+    })();
+    </script>
+
+    <!-- Background Audio (about page) -->
+    <audio id="background-music" loop crossorigin="anonymous">
+     <source src="images/aboutmeimages/aboutmeaudio.mp3" type="audio/mpeg">
+     Your browser does not support the audio element.
+    </audio>
+    <!-- audio control UI removed from page (volume button hidden) -->
+
+    <!-- Movie Intro Overlay and page content are wrapped so the audio control stays colored -->
+    <div class="page-root">
+        <!-- subtle full-screen black tint overlay (10%) -->
+        <div class="overlay" aria-hidden="true"></div>
+    <!-- Movie Intro Overlay -->
+    <!-- movie intro panels removed per user request -->
+
+    <div class="dropdown-menu visible">
+        <button class="dropdown-button">Menu</button>
+        <div class="dropdown-content">
+            <a href="index.html">Home</a>
+            <a href="about.html">About Me</a>
+            <a href="internship.html">Internship</a>
+            <a href="leadership.html">Leadership</a>
+            <a href="technical.html">Technical</a>
+            <a href="creative.html">Creative</a>
+            <a href="questions.html">Questions</a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="center-icon">
+            <div class="avatar-container" id="avatarContainer">
+                <img class="avatar-about" id="avatarImage" src="images/homeimages/fullbodyiconsmile-transparent.png" alt="Avatar">
+                <img class="avatar-about-closed" id="avatarImageClosed" src="images/homeimages/fullbodyiconsmileclosed-transparent.png" alt="Avatar Closed">
+            </div>
+        </div>
+        <div class="content-block" id="contentBlock">
+            <h3>Introduction</h3>
+            
+            <div class="content-section">
+                <p>I am Nam Tran, a Computer Science & Economics undergraduate at the University of Florida, originally from Ho Chi Minh City, Vietnam, and currently based in Gainesville, Florida. I am interested in building reliable, scalable, and well-designed technology solutions, with a focus on software engineering, systems, artificial intelligence, and full-stack development.</p>
+            </div>
+            
+            <div class="content-section">
+                <p>I enjoy working on projects that combine technical depth with thoughtful design. I am especially drawn to clean system architectures, expressive interfaces, and user experiences that feel intentional and intuitive. Outside of coursework, I often explore side projects involving pixel art and minimalist UI, using design as a way to complement and humanize technical work.</p>
+            </div>
+            
+            <div class="content-section">
+                <p>Beyond tech, I have a strong creative side. I enjoy dancing, writing poetry, and vlogging, which help me stay expressive, balanced, and inspired. These creative outlets influence how I think about storytelling, rhythm, and emotion in both design and software. On a lighter note, my favorite dish is bun bo Hue, and I firmly believe no debugging session is complete without good food—this one just happens to be my fuel of choice.</p>
+            </div>
+
+            <h3>Education</h3>
+            <div class="content-section">
+                <p><strong>University of Florida (UF) — Gainesville, FL, USA</strong></p>
+                <ul>
+                    <li>Computer Science & Economics Major</li>
+                    <li>August 2023 – Expected May 2027</li>
+                </ul>
+            </div>
+
+            <div class="content-section">
+                <p><strong>Tran Dai Nghia High School for the Gifted — Ho Chi Minh City, Vietnam</strong></p>
+                <ul>
+                    <li>English Major</li>
+                    <li>August 2016 - May 2023</li>
+                </ul>
+            </div>
+
+            <h3>Artist Statement</h3>
+            <div class="content-section">
+                <p>My work explores the intersection of technology, design, and storytelling. I am drawn to building software that is not only functional, but expressive—where systems are clean, interfaces are intentional, and every detail serves a purpose.</p>
+            </div>
+            
+            <div class="content-section">
+                <p>Influenced by my background growing up in Saigon and my training in computer science, I approach creation as both an engineer and a designer. I value simplicity, structure, and clarity, often gravitating toward minimalist aesthetics, pixel art, and thoughtful user experiences. Whether I am writing code or designing an interface, I aim to create work that feels approachable, human, and quietly meaningful.</p>
+            </div>
+            
+            <div class="content-section">
+                <p>For me, technology is a creative medium—a way to translate ideas into form, logic into interaction, and personal perspective into something others can experience.</p>
+            </div>
+        </div>
+        <div class="about-me-ballet">About Me</div>
+    </div>
+    </div> <!-- .page-root -->
+</body>
+<script>
+    // Dropdown menu toggle
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+    const dropdownButton = document.querySelector('.dropdown-button');
+    const dropdownLinks = document.querySelectorAll('.dropdown-content a');
+
+    // Get current page filename
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+
+    // Highlight current page in dropdown
+    dropdownLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+            link.classList.add('active');
+        }
+    });
+
+    // When the visible button is clicked, toggle the actual dropdown content
+    dropdownButton.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('menu-open');
+    });
+
+    // Add navigation to dropdown links
+    // Closing outro removed: navigate immediately when requested.
+    function runClosingOutro(navigateTo) {
+        if (navigateTo) {
+            try {
+                if (navigateTo.indexOf('index.html') !== -1 || navigateTo === '' || navigateTo === '/') {
+                    sessionStorage.removeItem('introShown');
+                }
+            } catch (e) { /* ignore */ }
+            window.location.href = navigateTo;
+        }
+    }
+
+    // Add navigation to dropdown links (use closing outro before navigating)
+    dropdownLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const href = this.getAttribute('href');
+            runClosingOutro(href);
+        });
+    });
+
+    // Close dropdown when clicking outside (ignore clicks on avatar and content block)
+    document.addEventListener('click', function(event) {
+        const avatarContainer = document.getElementById('avatarContainer');
+        const contentBlockEl = document.getElementById('contentBlock');
+        // If the click is inside the dropdown, avatar, or content block, do nothing.
+        if (dropdownMenu.contains(event.target) || (avatarContainer && avatarContainer.contains(event.target)) || (contentBlockEl && contentBlockEl.contains(event.target))) {
+            return;
+        }
+
+        // Otherwise close the dropdown
+        dropdownMenu.classList.remove('menu-open');
+        // Also hide the button if menu is closed
+        dropdownMenu.classList.remove('visible');
+    });
+
+    // Avatar interaction
+    const avatarContainer = document.getElementById('avatarContainer');
+    const avatarImage = document.getElementById('avatarImage');
+    const avatarImageClosed = document.getElementById('avatarImageClosed');
+    const contentBlock = document.getElementById('contentBlock');
+    const movieIntroLeft = document.querySelector('.movie-intro-left');
+    const movieIntroRight = document.querySelector('.movie-intro-right');
+    let isExpanded = false;
+
+    // Remove opening intro immediately: don't run the cinematic intro on load.
+    // Make the panels 'active' and remove them right away so the page appears
+    // in its normal (non-intro) state.
+    try {
+        if (movieIntroLeft) movieIntroLeft.classList.add('active');
+        if (movieIntroRight) movieIntroRight.classList.add('active');
+        const introLeft = document.querySelector('.movie-intro-left');
+        const introRight = document.querySelector('.movie-intro-right');
+        if (introLeft) introLeft.remove();
+        if (introRight) introRight.remove();
+    } catch (e) {
+        console.debug('Could not remove intro panels:', e);
+    }
+
+    // Also disable the opening blur animation on the page root so there is no
+    // transient blur/clean animation on load.
+    try {
+        const pageRootEl = document.querySelector('.page-root');
+        if (pageRootEl) pageRootEl.style.animation = 'none';
+    } catch (e) {
+        console.debug('Could not disable pageRoot animation:', e);
+    }
+
+    // Preload the "about" avatar images so the swap is instant on click
+    try {
+        const aboutOpenSrc = 'images/aboutmeimages/fullbodyiconabout-transparent.png';
+        const aboutClosedSrc = 'images/aboutmeimages/fullbodyiconaboutclosed-transparent.png';
+        const _preloadAboutOpen = new Image(); _preloadAboutOpen.src = aboutOpenSrc;
+        const _preloadAboutClosed = new Image(); _preloadAboutClosed.src = aboutClosedSrc;
+    } catch (e) { console.debug('Preload failed:', e); }
+
+    // pageRoot wrapper so fixed UI (audio control) stays outside grayscale
+    const pageRoot = document.querySelector('.page-root');
+
+    // Background audio fade-in on load
+    const bgAudio = document.getElementById('background-music');
+    if (bgAudio) {
+        bgAudio.volume = 0;
+        bgAudio.loop = true;
+        // Try to play; catch autoplay policy rejections
+        const playPromise = bgAudio.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                // Fade in
+                const fadeInDuration = 1000; // ms
+                const fadeInInterval = 50;
+                const steps = fadeInDuration / fadeInInterval;
+                let currentStep = 0;
+                const targetVolume = 0.18; // gentle background volume
+                const fadeTimer = setInterval(() => {
+                    currentStep++;
+                    const progress = currentStep / steps;
+                    bgAudio.volume = targetVolume * progress;
+                    if (progress >= 1) {
+                        clearInterval(fadeTimer);
+                        bgAudio.volume = targetVolume;
+                    }
+                }, fadeInInterval);
+            }).catch((err) => {
+                console.debug('Autoplay prevented:', err);
+            });
+        }
+    }
+
+    avatarImage.addEventListener('click', function(e) {
+        console.log('Avatar clicked!', e);
+        isExpanded = !isExpanded;
+        console.log('isExpanded:', isExpanded);
+        
+    if (isExpanded) {
+            // Switch to about me avatar
+            avatarImage.src = 'images/aboutmeimages/fullbodyiconabout-transparent.png';
+            avatarImageClosed.src = 'images/aboutmeimages/fullbodyiconaboutclosed-transparent.png';
+            
+            // Shift avatar and show content
+            avatarContainer.classList.add('shifted');
+            contentBlock.classList.add('active');
+
+            // Ensure content sections that are already in view reveal after the
+            // content block has finished its show transition. Using transitionend
+            // avoids measuring visibility while the block is still translated off-screen.
+            if (typeof revealContentSectionsNow === 'function') {
+                const onTransition = (ev) => {
+                    // wait for transform or opacity transition to finish
+                    if (ev.propertyName === 'transform' || ev.propertyName === 'opacity') {
+                        revealContentSectionsNow();
+                    }
+                };
+                // Attach one-time listener; if transitionend doesn't fire, fallback after 900ms
+                contentBlock.addEventListener('transitionend', onTransition, { once: true });
+                setTimeout(() => { try { revealContentSectionsNow(); } catch (e) { /* noop */ } }, 900);
+            }
+            
+            // Add color mode (no visual change as grayscale removed)
+            console.log('Adding color-mode class');
+            if (pageRoot) pageRoot.classList.add('color-mode');
+            // Also mark the background video as colored
+            if (backgroundVideo) backgroundVideo.classList.add('color');
+            // Also add color-mode to container for compatibility with homepage rules
+            const containerEl = document.querySelector('.container');
+            if (containerEl) containerEl.classList.add('color-mode');
+            // Show dropdown button when avatar expands (button must be clicked to open menu)
+            dropdownMenu.classList.add('visible');
+            console.log('PageRoot classes:', pageRoot ? pageRoot.className : '(none)');
+        } else {
+            // Switch back to smiling homepage avatar
+            avatarImage.src = 'images/homeimages/fullbodyiconsmile-transparent.png';
+            avatarImageClosed.src = 'images/homeimages/fullbodyiconsmileclosed-transparent.png';
+
+            // Move avatar back and hide content
+            avatarContainer.classList.remove('shifted');
+            contentBlock.classList.remove('active');
+
+            // Force a reflow so the browser registers the transform change immediately.
+            // Then remove the color-mode and video color on the next animation frame.
+            void document.body.offsetWidth;
+
+            requestAnimationFrame(() => {
+                console.log('Removing color-mode class (deferred)');
+                if (pageRoot) pageRoot.classList.remove('color-mode');
+                // Remove color class from background video when collapsing
+                if (backgroundVideo) backgroundVideo.classList.remove('color');
+                // Also remove color-mode from container
+                const containerEl = document.querySelector('.container');
+                if (containerEl) containerEl.classList.remove('color-mode');
+                // Hide dropdown button and close menu when avatar collapses
+                dropdownMenu.classList.remove('menu-open');
+                dropdownMenu.classList.remove('visible');
+                console.log('PageRoot classes:', pageRoot ? pageRoot.className : '(none)');
+            });
+
+            // Do NOT trigger the fullscreen closing outro when simply collapsing avatar.
+            // The outro should run only when navigating away (dropdown links). Keep local revert behavior.
+        }
+    });
+
+    // Also make closed avatar clickable
+    avatarImageClosed.addEventListener('click', function() {
+        avatarImage.click();
+    });
+
+    // Parallax effect - background follows cursor
+    const backgroundVideo = document.querySelector('.background-video');
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const maxOffset = 5; // Very small movement to avoid gaps
+    
+    document.addEventListener('mousemove', (e) => {
+        const centerX = windowWidth / 2;
+        const centerY = windowHeight / 2;
+        
+        // Calculate how far the cursor is from center (-1 to 1)
+        const offsetX = (e.clientX - centerX) / centerX;
+        const offsetY = (e.clientY - centerY) / centerY;
+        
+        // Calculate translation (move background opposite to cursor direction)
+        const translateX = offsetX * maxOffset;
+        const translateY = offsetY * maxOffset;
+        
+        // Apply transform to background video (translation only — no scale)
+        backgroundVideo.style.transform = `translate(${translateX}px, ${translateY}px)`;
+    });
+
+
+    // Passive background audio playback (no visible UI). Keep gentle default volume.
+    if (bgAudio) {
+        try { bgAudio.volume = 0.18; } catch(e) {}
+        // Attempt to play on user interactions to satisfy autoplay policies, but no visible UI is provided.
+        const _tryStart = () => { try { bgAudio.play().catch(()=>{}); } catch(e){} };
+        document.addEventListener('mousemove', _tryStart, { once: true });
+        document.addEventListener('touchstart', _tryStart, { once: true });
+        document.addEventListener('click', _tryStart, { once: true });
+        document.addEventListener('keydown', _tryStart, { once: true });
+        setTimeout(_tryStart, 1500);
+        bgAudio.addEventListener('ended', () => { try { bgAudio.currentTime = 0; bgAudio.play().catch(()=>{}); } catch(e){} });
+    }
+
+    // Volume UI removed - no volume slider or button handlers
+
+    // Restrict the background video to the first 90 seconds (1min30s)
+    (function limitAboutBackgroundSegment(){
+        try {
+            const fg = document.querySelector('.background-video');
+            if (!fg) return;
+            const SEGMENT_END = 90; // seconds
+
+            function onLoadedMeta(v) {
+                if (v.duration && v.duration <= SEGMENT_END) return false;
+                v.currentTime = 0;
+                v.play().catch(()=>{});
+                return true;
+            }
+
+            if (fg) fg.addEventListener('loadedmetadata', () => onLoadedMeta(fg));
+
+            // Use a single timer driven by the foreground video to reset both players
+            fg.addEventListener('timeupdate', () => {
+                try {
+                    if (fg.currentTime >= SEGMENT_END - 0.15) {
+                        // reset video to 0 and play
+                        fg.currentTime = 0;
+                        fg.play().catch(()=>{});
+                    }
+                } catch (e) { /* ignore */ }
+            });
+        } catch (e) { console.debug('Could not limit about background segment:', e); }
+    })();
+
+    // Scroll-reveal observer for content sections inside the content block.
+    (function setupContentSectionObserver(){
+        const contentBlockEl = document.getElementById('contentBlock');
+        if (!contentBlockEl) return;
+
+    // target both headings and content-section blocks so headings reveal as well
+    const sections = Array.from(contentBlockEl.querySelectorAll('.content-section, h2, h3'));
+    if (!sections.length) return;
+
+        // Root is the contentBlock so we observe intersection inside the scroll container
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    // Add visible with a slight stagger based on index to make it feel like a dropdown
+                    const idx = sections.indexOf(el);
+                    setTimeout(() => el.classList.add('visible'), Math.min(300, idx * 60));
+                    obs.unobserve(el);
+                }
+            });
+        }, {
+            root: contentBlockEl,
+            rootMargin: '0px 0px -12px 0px',
+            threshold: 0.08
+        });
+
+        // Make content-section elements keyboard-focusable (so :focus-within can apply)
+        sections.forEach(s => {
+            if (s.classList && s.classList.contains('content-section')) {
+                s.setAttribute('tabindex', '0');
+            }
+            observer.observe(s);
+        });
+    })();
+
+    // Synchronous reveal helper for the moment the content block becomes visible.
+    // This complements the IntersectionObserver: when the block opens we may need
+    // to reveal the currently-visible sections immediately (avoids missing the
+    // initial entrance if intersection events don't fire during the activation animation).
+    function revealContentSectionsNow(){
+        const contentBlockEl = document.getElementById('contentBlock');
+        if (!contentBlockEl) return;
+    const sections = Array.from(contentBlockEl.querySelectorAll('.content-section, h2, h3'));
+    if (!sections.length) return;
+
+        const rootRect = contentBlockEl.getBoundingClientRect();
+        sections.forEach((el, idx) => {
+            if (el.classList.contains('visible')) return; // already revealed
+            const r = el.getBoundingClientRect();
+            // Determine visibility relative to the content block viewport
+            const top = r.top - rootRect.top;
+            const bottom = r.bottom - rootRect.top;
+            const isVisible = (top < contentBlockEl.clientHeight) && (bottom > 0);
+            if (isVisible) {
+                setTimeout(() => el.classList.add('visible'), Math.min(300, idx * 60));
+            }
+        });
+    }
+</script>
+</html>

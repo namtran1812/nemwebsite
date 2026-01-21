@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Creative - Nems Website</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 100%;
+            min-height: 100vh;
+            background-color: #000;
+            background-image: url('images/creativeimages/creative.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            padding: 40px 20px;
+        }
+
+        /* Use the bub cursor globally like other pages */
+        body { cursor: url('images/homeimages/cursor.png') 42 42, pointer; }
+        * { cursor: url('images/homeimages/cursor.png') 42 42, pointer !important; }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .header h1 {
+            font-family: 'Press Start 2P', cursive;
+            color: #E78FA5;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .content {
+            max-width: 800px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            animation: float 3s ease-in-out infinite;
+            animation-delay: 0.2s;
+        }
+
+        .content p {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .back-button {
+            margin-top: 30px;
+            padding: 10px 20px;
+            background-color: #E78FA5;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-button:hover {
+            background-color: #d67a94;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes slideCloudOut {
+            from {
+                transform: translate(calc(-50% + 100vw), -50%);
+            }
+            to {
+                transform: translate(-150%, -50%);
+            }
+        }
+
+        @keyframes slideCloudOutPart1 {
+            from {
+                transform: translate(calc(-50% + 100vw), -50%);
+            }
+            to {
+                transform: translate(-30%, -50%);
+            }
+        }
+
+        @keyframes slideCloudOutPart2 {
+            from {
+                transform: translate(-30%, -50%);
+            }
+            to {
+                transform: translate(-150%, -50%);
+            }
+        }
+
+        .transition-cloud {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('images/homeimages/bigcloud.png');
+            background-size: 160%;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 9999;
+            display: none;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        .transition-cloud.active {
+            display: block;
+            animation: slideCloudOutPart1 0.2s ease-in-out forwards;
+        }
+
+        .dropdown-menu {
+            position: fixed;
+            top: 3px;
+            left: 20px;
+            z-index: 50;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .dropdown-button {
+            background-color: transparent;
+            color: #E78FA5;
+            padding: 60px 80px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .dropdown-button:hover {
+            background-color: transparent;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-image: url('images/dropdowncloud.png');
+            background-size: 153%;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-width: 150px;
+            padding: 45px 25px 50px 25px;
+            z-index: 1;
+            border-radius: 5px;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
+        }
+
+        .dropdown-content a {
+            color: #333;
+            padding: 7px 0;
+            margin: 0 auto;
+            text-decoration: none;
+            display: block;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            line-height: 10px;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+
+        .dropdown-content a:hover {
+            color: #E78FA5;
+        }
+
+        .dropdown-content a.active {
+            color: #E78FA5;
+            font-weight: bold;
+        }
+
+        .dropdown-menu.active .dropdown-content {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="transition-cloud"></div>
+    <div class="dropdown-menu">
+        <button class="dropdown-button">Menu</button>
+        <div class="dropdown-content">
+            <a href="index.html">Home</a>
+            <a href="about.html">About Me</a>
+            <a href="internship.html">Internship</a>
+            <a href="leadership.html">Leadership</a>
+            <a href="technical.html">Technical</a>
+            <a href="creative.html">Creative</a>
+            <a href="questions.html">Questions</a>
+        </div>
+    </div>
+    <div class="header">
+        <h1>Creative</h1>
+    </div>
+
+    <div class="content">
+        <p>Explore my creative works and artistic endeavors!</p>
+        <p>I enjoy [creative hobbies/interests] and have created [examples of creative work].</p>
+        <p>Creativity is an important part of how I approach problems and express myself.</p>
+        
+        <button class="back-button" onclick="navigateHome()">← Back Home</button>
+    </div>
+</body>
+</html>
+
+<script>
+    // Activate cloud animation part 2 on page load if transitioning from another page
+    const transitionCloud = document.querySelector('.transition-cloud');
+    if (transitionCloud) {
+        transitionCloud.style.display = 'block';
+        // Directly play part 2 animation on new page
+        transitionCloud.style.animation = 'slideCloudOutPart2 0.2s ease-in-out forwards';
+    }
+
+    function navigateHome() {
+        // Trigger cloud transition
+        transitionCloud.classList.add('active');
+        
+        // Navigate after cloud animation completes
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 500);
+    }
+
+    // Dropdown menu toggle
+    const dropdownButton = document.querySelector('.dropdown-button');
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+    const dropdownLinks = document.querySelectorAll('.dropdown-content a');
+
+    // Get current page filename
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+
+    // Highlight current page in dropdown
+    dropdownLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+            link.classList.add('active');
+        }
+    });
+
+    dropdownButton.addEventListener('click', function() {
+        dropdownMenu.classList.toggle('active');
+    });
+
+    // Add cloud transition to all dropdown links
+    dropdownLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Ensure cloud is visible before adding active class
+            transitionCloud.style.display = 'block';
+            transitionCloud.style.animation = 'slideCloudOutPart1 0.2s ease-in-out forwards';
+            
+            setTimeout(() => {
+                window.location.href = this.getAttribute('href');
+            }, 100);
+        });
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+        if (!dropdownMenu.contains(event.target)) {
+            dropdownMenu.classList.remove('active');
+        }
+    });
+</script>

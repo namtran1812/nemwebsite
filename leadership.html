@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leadership - Nems Website</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            width: 100%;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            position: relative;
+            overflow: hidden;
+            background-color: #000;
+            cursor: url('images/homeimages/cursor.png') 42 42, pointer;
+        }
+
+        /* Apply the bub cursor globally (match internship and homepage). Using !important
+           prevents other styles from overriding the custom cursor in nested elements. */
+        * { cursor: url('images/homeimages/cursor.png') 42 42, pointer !important; }
+
+        :root{
+            --bar-width: 180px;
+            --bar-overhang: 60px;
+            --bar-total: calc(var(--bar-width) + var(--bar-overhang));
+            --bar-slide-duration: 1.2s;
+            --bar-slide-ease: ease-in-out;
+        }
+
+        .page-root {
+            position: relative;
+            min-height: 100vh;
+            isolation: isolate;
+            filter: grayscale(100%);
+            transition: filter 0.8s ease-in-out;
+            animation: blurToClean 2s ease-in-out;
+        }
+
+        .page-root.color-mode { filter: grayscale(0%); }
+
+        .page-root .overlay {
+            position: fixed;
+            top: -6vh;
+            left: calc(-1 * var(--bar-overhang));
+            right: calc(-1 * var(--bar-overhang));
+            height: calc(100vh + 12vh);
+            background: rgba(0,0,0,0.40);
+            z-index: 5;
+            pointer-events: none;
+            transition: background 0.3s ease-in-out;
+        }
+
+        #background-video, .background-image {
+            position: fixed;
+            top: -6vh;
+            left: calc(-1 * var(--bar-overhang));
+            right: calc(-1 * var(--bar-overhang));
+            bottom: -6vh;
+            width: auto;
+            height: auto;
+            min-width: calc(100% + (var(--bar-overhang) * 2));
+            min-height: calc(100vh + 12vh);
+            object-fit: cover;
+            z-index: -1;
+            filter: blur(4px) grayscale(100%);
+            transition: filter 0.8s ease-in-out, transform 0.2s ease;
+        }
+        .background-image.color, .page-root.color-mode .background-image { filter: blur(4px) grayscale(0%); }
+
+        .container::before, .container::after {
+            content: ''; position: fixed; top: -6vh; width: var(--bar-width); height: calc(100vh + 12vh); background-color: #000; z-index: 99999; transition: width 0.6s ease-in-out; pointer-events: none;
+        }
+        .container::before { left: calc(-1 * var(--bar-overhang)); }
+        .container::after { right: calc(-1 * var(--bar-overhang)); }
+
+        .page-root.color-mode .container::before,
+        .page-root.color-mode .container::after,
+        .container.color-mode::before,
+        .container.color-mode::after { width: 0; }
+
+        .movie-intro-left, .movie-intro-right{ position: fixed; top: -6vh; height: calc(100vh + 12vh); background: black; z-index: 99998; pointer-events: none; transition: transform var(--bar-slide-duration) var(--bar-slide-ease); }
+        .movie-intro-left{ left: calc(-1 * var(--bar-overhang)); width: calc(50% + var(--bar-overhang)); animation: openLeft 2.5s ease-in-out forwards; }
+        .movie-intro-right{ right: calc(-1 * var(--bar-overhang)); width: calc(50% + var(--bar-overhang)); animation: openRight 2.5s ease-in-out forwards; }
+        .movie-intro-left.active { transform: translateX(-100%); animation: none; }
+        .movie-intro-right.active { transform: translateX(100%); animation: none; }
+        .movie-intro-left.closing { animation: closeLeft 2.5s ease-in-out forwards; }
+        .movie-intro-right.closing { animation: closeRight 2.5s ease-in-out forwards; }
+        .movie-intro-left.slide-out { transform: translateX(calc(-100vw - var(--bar-total))) !important; }
+        .movie-intro-right.slide-out { transform: translateX(calc(100vw + var(--bar-total))) !important; }
+        @keyframes openLeft { to { transform: translateX(calc(-100vw - var(--bar-total))); } }
+        @keyframes openRight{ to { transform: translateX(calc(100vw + var(--bar-total))); } }
+        @keyframes closeLeft{ from { transform: translateX(calc(-100vw - var(--bar-total))); } to { transform: translateX(0); } }
+        @keyframes closeRight{ from { transform: translateX(calc(100vw + var(--bar-total))); } to { transform: translateX(0); } }
+        @keyframes blurToClean { 0% { filter: blur(15px); opacity: 1; } 100% { filter: blur(0px); opacity: 1; } }
+        @keyframes closingBlur { 0% { filter: blur(0px); } 100% { filter: blur(15px); } }
+
+        .center-icon{ display:flex; justify-content:center; align-items:center; position:relative; height:100vh; padding-top:0; z-index:45; }
+        .center-icon img{ max-width: 75vw; max-height: 75vh; width: auto; height: auto; object-fit: contain; cursor:pointer; transition: transform 420ms var(--bar-slide-ease); }
+        .avatar-shifted { transform: translateX(24vw); }
+        .avatar-internship { filter: grayscale(100%); transition: filter 0.8s ease-in-out, transform 420ms var(--bar-slide-ease), opacity 0.2s linear; }
+        .page-root.color-mode .avatar-internship { filter: none; }
+        @keyframes aboutBlink { 0% { opacity: 1; } 71.43% { opacity: 1; } 71.5% { opacity: 0; } 100% { opacity: 0; } }
+        @keyframes aboutClosedBlink { 0% { opacity: 0; } 71.43% { opacity: 0; } 71.5% { opacity: 1; } 100% { opacity: 1; } }
+        .avatar-open, .avatar-closed { position: absolute; max-width:75vw; max-height:75vh; z-index:20; transition: opacity 0.2s linear; }
+        .avatar-open { animation: aboutBlink 2.8s infinite, float 3s ease-in-out infinite; }
+        .avatar-closed { animation: aboutClosedBlink 2.8s infinite, float 3s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-5px); } }
+        #avatarContainer { position: relative; z-index: 100; transition: transform 0.8s ease-in-out; display:flex; justify-content:center; align-items:center; transform: translateY(0); }
+        #avatarContainer.shifted { transform: translateY(0) translateX(24vw); }
+        #avatarColor { animation: float 3s ease-in-out infinite; }
+
+        .content-block{ position: fixed; left: 0; top: 100px; width: 65vw; height: 70vh; background: transparent; padding: 20px 30px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; overflow-x: hidden; z-index: 50; opacity: 0; transform: translateX(-100vw); transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out; color: #d0d0d0; font-family: 'Press Start 2P', cursive; font-size: 8px; line-height: 1.8; letter-spacing: 0.3px; -webkit-mask-image: linear-gradient(90deg, black 0%, black 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 85%, transparent 100%); mask-image: linear-gradient(90deg, black 0%, black 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 85%, transparent 100%); -webkit-mask-composite: source-in; mask-composite: intersect; scrollbar-width: none; }
+        .content-block::-webkit-scrollbar { display: none; }
+        .content-block.active { opacity: 1; transform: translateX(0); }
+        .content-block h3 { font-size: 10px; font-weight: 400; margin-top: 25px; margin-bottom: 12px; color: #E78FA5; letter-spacing: 0.5px; border-bottom: 1px solid #E78FA5; padding-bottom: 8px; }
+        .content-block h2 { font-size: 12px; font-weight: 400; margin-bottom: 20px; color: #E78FA5; letter-spacing: 1px; border-bottom: 2px solid #E78FA5; padding-bottom: 10px; }
+        .content-block p { margin-bottom: 12px; text-align: left; opacity: 0.95; background: rgba(231, 143, 165, 0.05); padding: 10px 12px; border-left: 2px solid #E78FA5; }
+        .content-block ul { margin-left: 0; margin-bottom: 8px; list-style: none; background: transparent; padding: 12px 0; border-left: none; }
+        .content-section { background: transparent; border: none; padding: 8px 0; margin-bottom: 8px; }
+        .content-section p { background: transparent; border: none; padding: 5px 0; margin-bottom: 8px; }
+        .content-section p:last-child { margin-bottom: 0; }
+        .content-section ul { background: transparent; border: none; padding: 0 0 0 15px; margin-bottom: 0; }
+        .content-block li { margin-bottom: 8px; position: relative; padding-left: 28px; font-size: 8px; }
+        .content-block li:before { content: "▸"; position: absolute; left: 0; color: #E78FA5; }
+
+    /* Keep spacing compact like internship page */
+    .accordion-item { transition: transform 180ms ease, filter 180ms ease; margin-bottom: 8px; padding: 4px 0; }
+    .accordion-item:hover { transform: translateX(4px); }
+    .accordion-button { display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left; background: transparent; border: none; color: #E78FA5; font-family: 'Press Start 2P', cursive; font-size: 10px; padding: 0; cursor: url('images/homeimages/cursor.png') 42 42, pointer; gap: 6px; }
+    .accordion-button .position-title { color: #E78FA5; font-weight: 600; }
+    .accordion-button .meta { display: flex; gap: 8px; align-items: center; color: #d0d0d0; font-size: 8px; font-family: 'Press Start 2P', cursive; }
+        .accordion-button .company { color: #d0d0d0; text-decoration: none; position: relative; display: inline-block; }
+        .accordion-button .company::before { content: ''; position: absolute; left: -12px; right: -12px; top: -8px; bottom: -8px; pointer-events: auto; }
+        .accordion-button .company:hover { color: #ffffff; text-shadow: 0 0 6px rgba(231,143,165,0.7); }
+        .accordion-button .view-blog { color: #d0d0d0; text-decoration: none; font-size: 8px; margin-left: 6px; }
+        .accordion-button .view-blog:hover { color: #ffffff; }
+        .accordion-button .sep { color: #d0d0d0; }
+        .accordion-button .accordion-date { color: #d0d0d0; font-size: 8px; font-family: 'Press Start 2P', cursive; letter-spacing: 0.5px; }
+        .content-block { counter-reset: position; }
+        .accordion-item { counter-increment: position; }
+        .position-title { position: relative; padding-left: 28px; }
+        .position-title::before { content: counter(position) "."; position: absolute; left: 0; top: 0; color: #E78FA5; font-size: 10px; line-height: 1; transition: color 180ms ease, transform 180ms ease; }
+        .accordion-item:hover .position-title::before { transform: translateX(3px); color: #fff; }
+        .accordion-button:focus { outline: none; }
+        .accordion-content { max-height: none !important; overflow: visible !important; transition: none !important; padding-top: 12px; padding-left: 28px; }
+
+        /* Move description slightly when hovering the position (match internship behaviour) */
+        .accordion-item:hover .accordion-content {
+            transform: translateX(4px);
+        }
+
+        /* Hover and keyboard focus styles: make title and meta white like internship page */
+    .accordion-button { transition: filter 180ms ease, transform 160ms ease, color 160ms ease, text-shadow 160ms ease; display: flex; flex-direction: column; align-items: flex-start; width: 100%; padding: 10px 14px; gap: 10px; color: rgba(255,255,255,0.92); cursor: url('images/homeimages/cursor.png') 42 42, pointer; }
+
+        .accordion-button:hover .position-title,
+        .accordion-button:hover .meta {
+            color: #ffffff;
+        }
+
+        .position-title { color: rgba(230,230,230,0.95); transition: color 160ms ease, text-shadow 160ms ease; display: block; margin-bottom: 8px; line-height: 1.1; position: relative; z-index: 1; }
+        .meta { color: rgba(200,200,200,0.9); transition: color 160ms ease, text-shadow 160ms ease; display: block; font-size: 0.88rem; }
+
+        .accordion-item:hover .position-title,
+        .accordion-button:focus-visible .position-title {
+            color: #ffffff;
+        }
+
+        .accordion-item:hover .meta,
+        .accordion-button:focus-visible .meta {
+            color: #ffffff;
+        }
+
+        .accordion-button:focus-visible {
+            outline: 2px solid rgba(231,143,165,0.25);
+            outline-offset: 4px;
+        }
+
+        /* Audio control styling copied from internship page */
+        .audio-control{ position: fixed; top:20px; right:20px; z-index:1000; display:flex; gap:8px; align-items:center; padding:0; filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: width 0.3s ease; }
+        .audio-control, .audio-control * { filter: none !important; }
+    .volume-button { background: none; border: none; padding: 8px; cursor: url('images/homeimages/cursor.png') 42 42, pointer; display:flex; align-items:center; justify-content:center; transition: transform 0.2s ease, filter 0.2s ease; flex-shrink:0; }
+        .volume-button:hover { transform: scale(1.2); filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)); }
+    .volume-slider { width: 80px; height: 4px; border-radius: 2px; background: linear-gradient(to right, rgba(255,255,255,0.3), rgba(255,255,255,0.6)); outline: none; cursor: url('images/homeimages/cursor.png') 42 42, pointer; -webkit-appearance: none; appearance: none; transition: opacity 0.3s ease, width 0.3s ease; }
+        .volume-slider.hidden { display: none; }
+    .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width:12px; height:12px; border-radius:50%; background:white; cursor: url('images/homeimages/cursor.png') 42 42, pointer; filter: drop-shadow(0 0 4px rgba(255,255,255,0.8)); }
+    .volume-slider::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:white; cursor: url('images/homeimages/cursor.png') 42 42, pointer; border:none; filter: drop-shadow(0 0 4px rgba(255,255,255,0.8)); }
+
+        .dropdown-menu { position: fixed; top: 3px; left: 20px; z-index: 100; animation: float 3s ease-in-out infinite; }
+    .dropdown-button { background-color: transparent; background-image: url('images/homeimages/fullcloud.png'); background-size: 100%; background-position: center; background-repeat: no-repeat; color: #E78FA5; padding: 60px 80px; font-family: 'Press Start 2P', cursive; font-size: 10px; border: none; cursor: url('images/homeimages/cursor.png') 42 42, pointer; border-radius: 5px; transition: background-color 0.3s ease; filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6)); animation: float 3s ease-in-out infinite; display: none; }
+    .dropdown-menu.visible .dropdown-button { display: block !important; }
+    /* Also support the JS toggle which uses the 'menu-open' class */
+    .dropdown-menu.menu-open .dropdown-button { display: block !important; }
+    .dropdown-menu.menu-open .dropdown-content { display: block !important; }
+        .dropdown-button:hover { background-color: transparent; }
+        .dropdown-content { display: none; position: absolute; background-image: url('images/dropdowncloud.png'); background-size: 153%; background-position: center; background-repeat: no-repeat; min-width: 150px; padding: 45px 25px 50px 25px; z-index: 1; border-radius: 5px; top: 80px; left: 50%; transform: translateX(-50%); filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6)); }
+    .dropdown-content a { color: #333; padding: 7px 0; margin: 0 auto; text-decoration: none; display: block; font-family: 'Press Start 2P', cursive; font-size: 8px; line-height: 10px; text-align: center; transition: color 0.3s ease; cursor: url('images/homeimages/cursor.png') 42 42, pointer; }
+        .dropdown-content a:hover { color: #E78FA5; }
+        .dropdown-content a.active { color: #E78FA5; font-weight: bold; }
+
+        @media (max-width:900px){ .content-block{ width: 82vw; left: 6vw; top: 58vh; height: 30vh; } .avatar-shifted{ transform: translateX(12vw); } }
+    </style>
+</head>
+<body>
+    <div id="audio-control" class="audio-control" role="group" aria-label="Audio controls">
+        <button id="volume-button" class="volume-button" title="Audio Control" aria-label="Toggle volume slider" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19"></polygon>
+                <path d="M15 9c1.5 1.5 1.5 3 0 4.5"></path>
+                <path d="M19 5c3 3 3 9 0 12"></path>
+            </svg>
+        </button>
+        <input type="range" id="volume-slider" class="volume-slider hidden" min="0" max="100" value="50" title="Volume">
+    </div>
+
+    <div class="page-root" id="pageRoot">
+        <div class="background-image" style="background-image: url('images/leadershipimages/uf.png'); background-size: cover; background-position: center;" aria-hidden="true"></div>
+        <div class="overlay" aria-hidden="true"></div>
+        <div class="movie-intro-left in" id="movieIntroLeft" aria-hidden="true"></div>
+        <div class="movie-intro-right in" id="movieIntroRight" aria-hidden="true"></div>
+
+        <div class="container">
+            <div class="dropdown-menu">
+                <button class="dropdown-button">Menu</button>
+                <div class="dropdown-content">
+                    <a href="index.html">Home</a>
+                    <a href="about.html">About Me</a>
+                    <a href="internship.html">Internship</a>
+                    <a href="leadership.html">Leadership</a>
+                    <a href="technical.html">Technical</a>
+                    <a href="creative.html">Creative</a>
+                    <a href="questions.html">Questions</a>
+                </div>
+            </div>
+
+            <div class="center-icon" id="avatarContainer">
+                <img id="avatarOpen" class="avatar-internship avatar-open" src="images/homeimages/fullbodyicon-transparent.png" alt="Avatar Open BW">
+                <img id="avatarClosed" class="avatar-internship avatar-closed" src="images/homeimages/fullbodyiconclosed-transparent.png" alt="Avatar Closed BW">
+                <img id="avatarColorOpen" class="avatar-internship avatar-open hidden" src="images/homeimages/fullbodyiconsmile-transparent.png" alt="Avatar Color Open">
+                <img id="avatarColorClosed" class="avatar-internship avatar-closed hidden" src="images/homeimages/fullbodyiconsmileclosed-transparent.png" alt="Avatar Color Closed">
+            </div>
+
+            <div id="contentBlock" class="content-block" aria-hidden="true">
+                <h2>Leadership Experience</h2>
+
+                <div class="accordion-item">
+                    <button class="accordion-button" data-target="ufTA" aria-expanded="true"><span class="position-title">Teaching Assistant (Python OOP & Data Structures and Algorithms)</span><span class="meta"><a class="company" href="https://cise.ufl.edu/" target="_blank" rel="noopener noreferrer">Department of Computer &amp; Information Science &amp; Engineering</a><span class="sep">•</span><span class="accordion-date">Aug 2024 - Present</span></span></button>
+                    <div id="ufTA" class="accordion-content" aria-hidden="false">
+                        <ul>
+                            <li>Increased student retention by 20% by delivering engaging database projects to reinforce key concepts and practical skills</li>
+                            <li>Improved overall grades by 15% through structured office hours to provide students with targeted support</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-button" data-target="mlLab" aria-expanded="true"><span class="position-title">Undergraduate Machine Learning Research Assistant</span><span class="meta"><a class="company" href="https://faculty.eng.ufl.edu/machine-learning/" target="_blank" rel="noopener noreferrer">Machine Learning Sensing Lab</a><span class="sep">•</span><span class="accordion-date">February 2024 - May 2025</span></span></button>
+                    <div id="mlLab" class="accordion-content" aria-hidden="false">
+                        <ul>
+                            <li>Created distributed simulation system with 14x throughput in Python handling 4.7 million simulations</li>
+                            <li>Developed hybrid LSTM model for Agro-ML with SNMP monitoring tools, outperforming industry benchmarks by 47%</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-button" data-target="sase" aria-expanded="true"><span class="position-title">Full Stack Web Developer</span><span class="meta"><a class="company" href="https://ufsase.com/" target="_blank" rel="noopener noreferrer">Society of Asian Scientists and Engineers</a><span class="sep">•</span><span class="accordion-date">August 2024 - May 2025</span></span></button>
+                    <div id="sase" class="accordion-content" aria-hidden="false">
+                        <ul>
+                            <li>Spearheaded the development of an AI-powered trash-cleaning robot leveraging CV, SLAM, and serverless cloud computing</li>
+                            <li>Engineered React and CSS dashboards and implemented real-time Node.js + REST API communication, cutting latency by 60%</li>
+                            <li>Orchestrated CI/CD automation with GitHub Actions and Docker (SRE), reducing testing overhead by 35%</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-button" data-target="uwcse" aria-expanded="true"><span class="position-title">Outreach Director</span><span class="meta"><a class="company" href="https://ufwicse.com/" target="_blank" rel="noopener noreferrer">Women in Computer Science &amp; Engineering</a><span class="sep">•</span><span class="accordion-date">December 2023 - May 2025</span></span></button>
+                    <div id="uwcse" class="accordion-content" aria-hidden="false">
+                        <ul>
+                            <li>Organized the annual Code-a-thon, which invites 60 middle schools to high school kids on campus to participate in a series of workshops, including an introduction to game development, quantum computing, and AI.</li>
+                            <li>Designed an Introduction to Python course featuring gaming projects like Tic Tac Toe on PyGames for middle school girls.</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Core cinematic behavior copied from internship.html
+        const pageRoot = document.getElementById('pageRoot');
+        const movieIntroLeft = document.getElementById('movieIntroLeft');
+        const movieIntroRight = document.getElementById('movieIntroRight');
+        const avatarOpen = document.getElementById('avatarOpen');
+        const avatarClosed = document.getElementById('avatarClosed');
+        const avatarColorOpen = document.getElementById('avatarColorOpen');
+        const avatarColorClosed = document.getElementById('avatarColorClosed');
+        const contentBlock = document.getElementById('contentBlock');
+        const backgroundImage = document.querySelector('.background-image');
+        const bgAudio = document.getElementById('background-music');
+        const dropdownMenu = document.querySelector('.dropdown-menu');
+        const dropdownButton = document.querySelector('.dropdown-button');
+        const dropdownLinks = document.querySelectorAll('.dropdown-content a');
+
+        // Parallax effect - background follows cursor (match internship/home behavior)
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const maxOffset = 5; // small movement to avoid visible gaps
+        document.addEventListener('mousemove', (e) => {
+            const centerX = windowWidth / 2;
+            const centerY = windowHeight / 2;
+            const offsetX = (e.clientX - centerX) / centerX;
+            const offsetY = (e.clientY - centerY) / centerY;
+            const translateX = offsetX * maxOffset;
+            const translateY = offsetY * maxOffset;
+            if (backgroundImage) backgroundImage.style.transform = `translate(${translateX}px, ${translateY}px)`;
+        });
+
+        // Normalize accordion date text: convert months to 3-letter abbreviations and format like 'May 2026 - Aug 2026'
+        (function normalizeDates(){
+            const map = {
+                'january': 'Jan', 'february': 'Feb', 'march': 'Mar', 'april': 'Apr', 'may': 'May', 'june': 'Jun',
+                'july': 'Jul', 'august': 'Aug', 'september': 'Sep', 'october': 'Oct', 'november': 'Nov', 'december': 'Dec',
+                'jan': 'Jan', 'feb': 'Feb', 'mar': 'Mar', 'apr': 'Apr', 'jun': 'Jun', 'jul': 'Jul', 'aug': 'Aug', 'sep': 'Sep', 'oct': 'Oct', 'nov': 'Nov', 'dec': 'Dec'
+            };
+            const dateEls = document.querySelectorAll('.accordion-date');
+            dateEls.forEach(el => {
+                const text = el.textContent.trim();
+                const parts = text.split('-').map(s => s.trim());
+                if (parts.length === 2) {
+                    const left = parts[0].split(' ');
+                    const right = parts[1].split(' ');
+
+                    // Preserve 'Present' (case-insensitive) on the right side
+                    const rightRaw = parts[1].toLowerCase();
+                    const isRightPresent = /present/.test(rightRaw);
+
+                    const leftMonth = left[0] ? map[left[0].toLowerCase()] || (left[0].slice(0,1).toUpperCase()+left[0].slice(1,3).toLowerCase()) : '';
+                    const leftYear = left[left.length-1] || '';
+                    let rightMonth = '';
+                    let rightYear = '';
+                    if (isRightPresent) {
+                        rightMonth = 'Present';
+                    } else {
+                        rightMonth = right[0] ? map[right[0].toLowerCase()] || (right[0].slice(0,1).toUpperCase()+right[0].slice(1,3).toLowerCase()) : '';
+                        rightYear = right[right.length-1] || '';
+                    }
+
+                    const formatted = isRightPresent ? `${leftMonth} ${leftYear} - Present` : `${leftMonth} ${leftYear} - ${rightMonth} ${rightYear}`.trim();
+                    el.textContent = formatted;
+                } else {
+                    let lowered = text.toLowerCase();
+                    lowered = lowered.replace(/^([a-z])/, (m,c)=>c.toUpperCase());
+                    el.textContent = lowered;
+                }
+            });
+        })();
+
+        let isOpen = false;
+
+        function runOpeningIntro() {
+            if (movieIntroLeft && movieIntroRight) {
+                movieIntroLeft.classList.remove('in');
+                movieIntroRight.classList.remove('in');
+                movieIntroLeft.classList.add('out');
+                movieIntroRight.classList.add('out');
+                setTimeout(() => {
+                    if (movieIntroLeft.parentNode) movieIntroLeft.parentNode.removeChild(movieIntroLeft);
+                    if (movieIntroRight.parentNode) movieIntroRight.parentNode.removeChild(movieIntroRight);
+                }, 700);
+            }
+        }
+
+        function toggleOpen() {
+            isOpen = !isOpen;
+            const containerEl = document.querySelector('.container');
+            const left = document.querySelector('.movie-intro-left');
+            const right = document.querySelector('.movie-intro-right');
+
+            if (isOpen) {
+                if (pageRoot) pageRoot.classList.add('color-mode');
+                if (avatarOpen) avatarOpen.classList.add('hidden');
+                if (avatarClosed) avatarClosed.classList.add('hidden');
+                if (avatarColorOpen) avatarColorOpen.classList.remove('hidden');
+                if (avatarColorClosed) avatarColorClosed.classList.remove('hidden');
+                const avatarContainerEl = document.getElementById('avatarContainer');
+                if (avatarContainerEl) avatarContainerEl.classList.add('shifted');
+                contentBlock.classList.add('active');
+                if (backgroundImage) backgroundImage.classList.add('color');
+                if (containerEl) containerEl.classList.add('color-mode');
+                if (dropdownMenu) { dropdownMenu.classList.add('visible'); }
+                if (left) left.classList.add('slide-out');
+                if (right) right.classList.add('slide-out');
+            } else {
+                if (pageRoot) pageRoot.classList.remove('color-mode');
+                if (avatarColorOpen) avatarColorOpen.classList.add('hidden');
+                if (avatarColorClosed) avatarColorClosed.classList.add('hidden');
+                if (avatarOpen) avatarOpen.classList.remove('hidden');
+                if (avatarClosed) avatarClosed.classList.remove('hidden');
+                const avatarContainerEl2 = document.getElementById('avatarContainer');
+                if (avatarContainerEl2) avatarContainerEl2.classList.remove('shifted');
+                contentBlock.classList.remove('active');
+                if (left) left.classList.remove('slide-out');
+                if (right) right.classList.remove('slide-out');
+                if (left) void left.offsetWidth;
+                if (right) void right.offsetWidth;
+                requestAnimationFrame(() => {
+                    if (pageRoot) pageRoot.classList.remove('color-mode');
+                    if (backgroundImage) backgroundImage.classList.remove('color');
+                    if (containerEl) containerEl.classList.remove('color-mode');
+                    if (dropdownMenu) { dropdownMenu.classList.remove('menu-open'); dropdownMenu.classList.remove('visible'); }
+                });
+            }
+        }
+
+        function runClosingOutro(navigateTo) {
+            const closingLeft = document.createElement('div');
+            const closingRight = document.createElement('div');
+
+            closingLeft.style.cssText = `
+                position: fixed;
+                top: -6vh;
+                left: calc(-1 * var(--bar-overhang));
+                width: calc(100% + (var(--bar-overhang) * 2));
+                height: calc(100vh + 12vh);
+                background-color: #000;
+                z-index: 9998;
+                transform: translateX(calc(-100vw - var(--bar-total)));
+                animation: closeLeft 2.5s ease-in-out forwards;
+                pointer-events: none;
+            `;
+
+            closingRight.style.cssText = `
+                position: fixed;
+                top: -6vh;
+                left: calc(-1 * var(--bar-overhang));
+                width: calc(100% + (var(--bar-overhang) * 2));
+                height: calc(100vh + 12vh);
+                background-color: #000;
+                z-index: 9998;
+                transform: translateX(calc(100vw + var(--bar-total)));
+                animation: closeRight 2.5s ease-in-out forwards;
+                pointer-events: none;
+            `;
+
+            if (pageRoot) {
+                pageRoot.style.animation = 'closingBlur 2.5s ease-in-out forwards';
+                pageRoot.appendChild(closingLeft);
+                pageRoot.appendChild(closingRight);
+            } else {
+                document.body.style.animation = 'closingBlur 2.5s ease-in-out forwards';
+                document.body.appendChild(closingLeft);
+                document.body.appendChild(closingRight);
+            }
+
+            setTimeout(() => {
+                if (navigateTo) window.location.href = navigateTo;
+            }, 2500);
+        }
+
+        window.addEventListener('load', ()=>{
+            setTimeout(()=>{
+                try {
+                    if (movieIntroLeft) movieIntroLeft.classList.add('active');
+                    if (movieIntroRight) movieIntroRight.classList.add('active');
+                    const introLeft = document.querySelector('.movie-intro-left');
+                    const introRight = document.querySelector('.movie-intro-right');
+                    if (introLeft) introLeft.remove();
+                    if (introRight) introRight.remove();
+                } catch(e) { console.debug('Could not remove intro panels:', e); }
+            }, 2500);
+
+            if (backgroundImage){ /* no-op but keep symmetry */ }
+        });
+
+        if (avatarOpen) avatarOpen.addEventListener('click', toggleOpen);
+        if (avatarClosed) avatarClosed.addEventListener('click', toggleOpen);
+        if (avatarColorOpen) avatarColorOpen.addEventListener('click', toggleOpen);
+        if (avatarColorClosed) avatarColorClosed.addEventListener('click', toggleOpen);
+
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        dropdownLinks.forEach(link => { const href = link.getAttribute('href'); if (href === currentPage || (currentPage === '' && href === 'index.html')) link.classList.add('active'); });
+
+        if (dropdownButton) {
+            dropdownButton.addEventListener('click', function(e){ e.stopPropagation(); dropdownMenu.classList.toggle('menu-open'); });
+        }
+
+        dropdownLinks.forEach(link => {
+            link.addEventListener('click', function(e){ e.preventDefault(); runClosingOutro(this.getAttribute('href')); });
+        });
+
+        document.addEventListener('click', function(event) {
+            const avatarContainer = document.getElementById('avatarContainer');
+            const contentBlockEl = document.getElementById('contentBlock');
+            if (dropdownMenu.contains(event.target) || (avatarContainer && avatarContainer.contains(event.target)) || (contentBlockEl && contentBlockEl.contains(event.target))) {
+                return;
+            }
+            dropdownMenu.classList.remove('menu-open');
+            dropdownMenu.classList.remove('visible');
+        });
+
+        // Volume control (no audio file on this page, but keep UI)
+        const volumeButton = document.getElementById('volume-button');
+        const volumeSlider = document.getElementById('volume-slider');
+        const audioControl = document.getElementById('audio-control');
+        if (volumeButton && volumeSlider){
+            volumeButton.addEventListener('click', function(e){ e.stopPropagation(); volumeSlider.classList.toggle('hidden'); audioControl.classList.toggle('expanded'); if (!volumeSlider.classList.contains('hidden')) volumeSlider.focus(); });
+            document.addEventListener('click', function(e){ if (!audioControl.contains(e.target)){ volumeSlider.classList.add('hidden'); audioControl.classList.remove('expanded'); } });
+            volumeSlider.addEventListener('input', function(e){ /* no-op */ });
+        }
+    </script>
+</body>
+</html>

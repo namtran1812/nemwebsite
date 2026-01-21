@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internship - Nems Website</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            width: 100%;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            position: relative;
+            overflow: hidden; /* page-level scrolling disabled; content block will scroll */
+            background-color: #000;
+        }
+
+        /* Use the same custom 'bub' cursor as the homepage/about pages */
+        body { cursor: url('images/homeimages/cursor.png') 42 42, pointer; }
+        * { cursor: url('images/homeimages/cursor.png') 42 42, pointer !important; }
+
+        :root{
+            --bar-width: 180px; /* visible width for persistent bars */
+            --bar-overhang: 60px; /* how much it extends off-screen */
+            --bar-total: calc(var(--bar-width) + var(--bar-overhang));
+            --bar-slide-duration: 1.2s; /* match about.html */
+            --bar-slide-ease: ease-in-out;
+        }
+
+        /* Page root receives the cinematic grayscale/blur filter. Keep controls outside this element so they remain colored. */
+        /* Remove default black-and-white cinematic state — page shows color by default */
+        .page-root {
+            position: relative;
+            min-height: 100vh;
+            isolation: isolate;
+            filter: none;
+            transition: filter 0.3s ease-in-out;
+        }
+        .page-root.color-mode { filter: none; }
+
+        /* subtle full-screen black tint overlay (match About page) */
+        .page-root .overlay {
+            position: fixed;
+            /* expand off-screen to match the movie intro bars and avoid visible gaps */
+            top: -6vh;
+            left: calc(-1 * var(--bar-overhang));
+            right: calc(-1 * var(--bar-overhang));
+            height: calc(100vh + 12vh);
+            background: rgba(0,0,0,0.40); /* 40% black tint */
+            z-index: 5; /* sit above the video but below content (content uses z-index >=20) */
+            pointer-events: none;
+            transition: background 0.3s ease-in-out;
+        }
+
+        /* Background video inside the page-root so it is affected by the filter.
+           Expand it off-screen (match overlay/bar offsets) so small parallax transforms
+           or the persistent side bars never reveal background gaps. */
+        #background-video {
+            position: fixed;
+            top: -6vh;
+            left: calc(-1 * var(--bar-overhang));
+            right: calc(-1 * var(--bar-overhang));
+            bottom: -6vh;
+            width: auto;
+            height: auto;
+            min-width: calc(100% + (var(--bar-overhang) * 2));
+            min-height: calc(100vh + 12vh);
+            object-fit: cover;
+            z-index: -1;
+            filter: blur(4px) grayscale(100%);
+            transition: filter 0.8s ease-in-out, transform 0.2s ease;
+        }
+        .background-video.color, .page-root.color-mode #background-video { filter: blur(4px) grayscale(0%); }
+
+        /* Persistent side bars implemented like About page (container pseudo-elements) */
+        /* Remove persistent side bars (collapse them) */
+        .container::before, .container::after {
+            content: '';
+            position: fixed;
+            top: -6vh;
+            width: 0;
+            height: calc(100vh + 12vh);
+            background-color: transparent;
+            z-index: 0;
+            transition: width 0.2s ease-in-out;
+            pointer-events: none;
+        }
+        .container::before { left: 0; }
+        .container::after { right: 0; }
+
+        /* Movie intro panels that animate in/out above the persistent bars (match about timings) */
+        /* movie intro removed for a simpler, immediate entrance */
+
+        @keyframes openLeft { to { transform: translateX(calc(-100vw - var(--bar-total))); } }
+        @keyframes openRight{ to { transform: translateX(calc(100vw + var(--bar-total))); } }
+        @keyframes closeLeft{ from { transform: translateX(calc(-100vw - var(--bar-total))); } to { transform: translateX(0); } }
+        @keyframes closeRight{ from { transform: translateX(calc(100vw + var(--bar-total))); } to { transform: translateX(0); } }
+
+        /* Blur animations to match About page intro/outro */
+        @keyframes blurToClean {
+            0% { filter: blur(15px); opacity: 1; }
+            100% { filter: blur(0px); opacity: 1; }
+        }
+
+        @keyframes closingBlur {
+            0% { filter: blur(0px); }
+            100% { filter: blur(15px); }
+        }
+
+        /* Center area (avatar) */
+    .center-icon{ display:flex; justify-content:center; align-items:center; position:relative; height:100vh; padding-top:0; z-index:45; }
+    .center-icon img{ max-width: 75vw; max-height: 75vh; width: auto; height: auto; object-fit: contain; cursor:pointer; transition: transform 420ms var(--bar-slide-ease); }
+        .avatar-shifted { transform: translateX(24vw); }
+
+        /* Avatars are full-color by default on this page */
+        .avatar-internship {
+            filter: none;
+            transition: transform 420ms var(--bar-slide-ease), opacity 0.2s linear;
+        }
+
+        /* Blinking swap like About page: show closed/open BW states toggling during intro */
+        @keyframes aboutBlink {
+            0% { opacity: 1; }
+            71.43% { opacity: 1; }
+            71.5% { opacity: 0; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes aboutClosedBlink {
+            0% { opacity: 0; }
+            71.43% { opacity: 0; }
+            71.5% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+
+    .avatar-open, .avatar-closed { position: absolute; max-width:75vw; max-height:75vh; z-index:20; transition: opacity 0.2s linear; }
+    /* Keep blink behavior for the visible avatars */
+    .avatar-open { animation: aboutBlink 2.8s infinite, float 3s ease-in-out infinite; }
+    .avatar-closed { animation: aboutClosedBlink 2.8s infinite, float 3s ease-in-out infinite; }
+
+        /* Floating keyframes used across pages */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+    /* Avatar container shift — match About page sliding without changing base position */
+    /* Move avatar up by 14% of viewport while preserving horizontal slide when shifted */
+    #avatarContainer { position: relative; z-index: 100; transition: transform 0.8s ease-in-out; display:flex; justify-content:center; align-items:center; transform: translateY(0); }
+    #avatarContainer.shifted { transform: translateY(0) translateX(24vw); }
+
+    /* Ensure the colored avatar floats too when visible */
+    #avatarColor { animation: float 3s ease-in-out infinite; }
+
+        /* Content block (match About page sizing, styling and logic) */
+        .content-block{
+            position: fixed;
+            left: 0;
+            top: 100px;
+            width: 65vw;
+            height: 70vh;
+            background: transparent;
+            padding: 20px 30px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+            overflow-x: hidden;
+            z-index: 50;
+            opacity: 0;
+            transform: translateX(-100vw);
+            transition: transform 0.8s ease-in-out, opacity 0.8s ease-in-out;
+            color: #d0d0d0;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            line-height: 1.8;
+            letter-spacing: 0.3px;
+            -webkit-mask-image: linear-gradient(90deg, black 0%, black 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 85%, transparent 100%);
+            mask-image: linear-gradient(90deg, black 0%, black 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 85%, transparent 100%);
+            -webkit-mask-composite: source-in;
+            mask-composite: intersect;
+            scrollbar-width: none;
+        }
+
+        .content-block::-webkit-scrollbar { display: none; }
+
+        .content-block.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .content-block h3 {
+            font-size: 10px;
+            font-weight: 400;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            color: #E78FA5;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #E78FA5;
+            padding-bottom: 8px;
+        }
+
+        .content-block h2 {
+            font-size: 12px;
+            font-weight: 400;
+            margin-bottom: 20px;
+            color: #E78FA5;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #E78FA5;
+            padding-bottom: 10px;
+        }
+
+        .content-block p {
+            margin-bottom: 12px;
+            text-align: left;
+            opacity: 0.95;
+            background: rgba(231, 143, 165, 0.05);
+            padding: 10px 12px;
+            border-left: 2px solid #E78FA5;
+        }
+
+        .content-block ul {
+            margin-left: 0;
+            margin-bottom: 8px;
+            list-style: none;
+            background: transparent;
+            padding: 12px 0;
+            border-left: none;
+        }
+
+        .content-section {
+            background: transparent;
+            border: none;
+            padding: 8px 0;
+            margin-bottom: 8px;
+        }
+
+        /* Scroll reveal / dropdown animation: headings and accordion items animate
+           in as they enter the visible area of the #contentBlock scroll container. */
+        .content-block h2,
+        .content-block h3,
+        .accordion-item {
+            will-change: transform, opacity;
+            opacity: 0;
+            transform: translateY(12px);
+            transition: transform 420ms cubic-bezier(.2,.8,.2,1), opacity 420ms ease;
+        }
+
+        .content-block h2.visible,
+        .content-block h3.visible,
+        .accordion-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .content-block h2,
+            .content-block h3,
+            .accordion-item { transition: none !important; transform: none !important; opacity: 1 !important; }
+        }
+
+        /* Default appearance: match About page content-section baseline (transparent, subtle padding) */
+        .accordion-item {
+            display: block;
+            width: 100%;
+            position: relative;
+            pointer-events: auto;
+            padding: 12px 12px; /* slightly larger padding for a card-like feel */
+            margin-bottom: 10px;
+            /* subtle frosted/solid base so blocks are visible when not hovered */
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.03);
+            border-radius: 8px;
+            transition: transform 420ms cubic-bezier(.2,.8,.2,1), opacity 420ms ease, background 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+        }
+
+        .accordion-item.visible:hover,
+        .accordion-item.visible:focus-within {
+            background: linear-gradient(180deg, rgba(231,143,165,0.14), rgba(231,143,165,0.06));
+            box-shadow: 0 18px 48px rgba(231,143,165,0.16), inset 0 0 0 1px rgba(231,143,165,0.12);
+            border-radius: 8px;
+            cursor: default;
+        }
+
+        .accordion-item.visible:focus-within {
+            outline: 2px solid rgba(231,143,165,0.26);
+            outline-offset: 4px;
+        }
+
+
+        /* Paragraphs inside sections/accordion keep transparent background and subtle padding
+           with a left accent when needed (match About page visuals) */
+        .content-section p,
+        .accordion-item p {
+            background: transparent;
+            border: none;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            border-left: 2px solid #E78FA5;
+        }
+
+        .content-section p:last-child {
+            margin-bottom: 0;
+        }
+
+        .content-section ul {
+            background: transparent;
+            border: none;
+            padding: 0 0 0 15px;
+            margin-bottom: 0;
+        }
+
+        .content-block li {
+            margin-bottom: 8px;
+            position: relative;
+            /* match position header padding so bullets/text align with the header text */
+            padding-left: 28px;
+            font-size: 8px;
+        }
+
+        .content-block li:before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #E78FA5;
+        }
+
+        /* Accordion styles used inside the content block */
+    .accordion-item { margin-bottom: 8px; }
+        .accordion-button {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            width: 100%;
+            text-align: left;
+            background: transparent;
+            border: none;
+            color: #E78FA5;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            padding: 0;
+            cursor: url('images/homeimages/cursor.png') 42 42, pointer;
+            gap: 6px;
+        }
+    /* Position (first line) */
+    .accordion-button .position-title { color: #E78FA5; font-weight: 600; }
+    /* Meta line: Company • Date */
+    .accordion-button .meta { display: flex; gap: 8px; align-items: center; color: #d0d0d0; font-size: 8px; font-family: 'Press Start 2P', cursive; }
+        .accordion-button .company { color: #d0d0d0; text-decoration: none; position: relative; display: inline-block; }
+        /* Invisible enlarged hit area so moving the mouse close to the company triggers hover
+           without changing layout. Pseudo-element is part of the anchor so clicks still follow. */
+        .accordion-button .company::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            right: -12px;
+            top: -8px;
+            bottom: -8px;
+            pointer-events: auto; /* ensure this region triggers :hover on the anchor */
+        }
+        .accordion-button .company:hover { color: #ffffff; text-shadow: 0 0 6px rgba(231,143,165,0.7); }
+    .accordion-button .view-blog { color: #d0d0d0; text-decoration: none; font-size: 8px; margin-left: 6px; }
+    .accordion-button .view-blog:hover { color: #ffffff; }
+        .accordion-button .sep { color: #d0d0d0; }
+        .accordion-button .accordion-date { color: #d0d0d0; font-size: 8px; font-family: 'Press Start 2P', cursive; letter-spacing: 0.5px; }
+
+    /* Numbered index before the position title */
+    .content-block { counter-reset: position; }
+    .accordion-item { counter-increment: position; }
+    .position-title { position: relative; padding-left: 28px; }
+    .position-title::before { content: counter(position) "."; position: absolute; left: 0; top: 0; color: #E78FA5; font-size: 10px; line-height: 1; transition: color 180ms ease, transform 180ms ease; }
+    .accordion-item:hover .position-title::before { transform: translateX(3px); color: #fff; }
+        .accordion-button:focus { outline: none; }
+        /* Show all accordion content by default (disable collapsing behavior) */
+        .accordion-content {
+            max-height: none !important;
+            overflow: visible !important;
+            transition: none !important;
+            padding-top: 12px;
+            /* indent subsection content so it's visually nested beneath the header */
+            padding-left: 28px;
+        }
+        .accordion-content.open { padding-top: 12px; }
+
+                /* Glow on hover for each position (subtle pixelated neon) */
+                .accordion-item { transition: transform 180ms ease, filter 180ms ease; margin-bottom: 8px; padding: 4px 0; }
+                .accordion-item:hover { transform: translateX(4px); }
+                /* removed drop-shadow glow on hover */
+                .accordion-item:hover .accordion-button { filter: none; }
+                /* Make the clickable/hover area larger so moving the mouse near the header triggers glow */
+                .accordion-button { transition: filter 180ms ease, transform 160ms ease, color 160ms ease, text-shadow 160ms ease; display: flex; flex-direction: column; align-items: flex-start; width: 100%; padding: 10px 14px; gap: 10px; color: rgba(255,255,255,0.92); cursor: url('images/homeimages/cursor.png') 42 42, pointer; }
+
+                /* Hovering the button itself should also trigger the glow on both title and meta */
+                .accordion-button:hover .position-title,
+                .accordion-button:hover .meta {
+                    color: #ffffff;
+                }
+
+                /* Disable lift translate on hover for internship accordion items (no-lift style) */
+                .content-block .accordion-item:hover {
+                    transform: none !important;
+                }
+
+                /* Position text and meta default colors and smooth transitions */
+                .position-title { color: rgba(230,230,230,0.95); transition: color 160ms ease, text-shadow 160ms ease; display: block; margin-bottom: 8px; line-height: 1.1; position: relative; z-index: 1; }
+                /* extend the hover/hotspot slightly below the title so moving the mouse just under
+                    the title still highlights it. Company links are z-index:2 so they remain on top. */
+                .position-title::after { content: ''; position: absolute; left: -6px; right: -6px; top: 100%; height: 16px; pointer-events: auto; z-index: 0; }
+            .meta { color: rgba(200,200,200,0.9); transition: color 160ms ease, text-shadow 160ms ease; display: block; font-size: 0.88rem; }
+
+                        /* On hover (mouse) or keyboard focus-visible: make the position text white and add glow.
+                             Avoid :focus and :focus-within so opening (click) doesn't force white. */
+                        .accordion-item:hover .position-title,
+                        .accordion-button:focus-visible .position-title {
+                            color: #ffffff;
+                        }
+
+                        .accordion-item:hover .meta,
+                        .accordion-button:focus-visible .meta {
+                            color: #ffffff;
+                        }
+
+                        /* Visible focus for keyboard users */
+                        .accordion-button:focus-visible {
+                            outline: 2px solid rgba(231,143,165,0.25);
+                            outline-offset: 4px;
+                        }
+
+    /* Keep audio control colored by placing it outside the filtered .page-root (no filter needed) */
+    .audio-control{ position: fixed; top:20px; right:20px; z-index:1000; display:flex; gap:8px; align-items:center; padding:0; filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: width 0.3s ease; }
+
+    /* Always ensure the audio control stays visually unaffected by page filters */
+    .audio-control, .audio-control * { filter: none !important; }
+
+    .audio-control.expanded { width: auto; }
+
+    .volume-button { background: none; border: none; padding: 8px; cursor: url('images/homeimages/cursor.png') 42 42, pointer; display:flex; align-items:center; justify-content:center; transition: transform 0.2s ease, filter 0.2s ease; flex-shrink:0; }
+    .volume-button:hover { transform: scale(1.2); filter: drop-shadow(0 0 8px rgba(255,255,255,0.8)); }
+
+    .volume-slider { width: 80px; height: 4px; border-radius: 2px; background: linear-gradient(to right, rgba(255,255,255,0.3), rgba(255,255,255,0.6)); outline: none; cursor: url('images/homeimages/cursor.png') 42 42, pointer; -webkit-appearance: none; appearance: none; transition: opacity 0.3s ease, width 0.3s ease; }
+    .volume-slider.hidden { display: none; }
+    .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width:12px; height:12px; border-radius:50%; background:white; cursor: url('images/homeimages/cursor.png') 42 42, pointer; filter: drop-shadow(0 0 4px rgba(255,255,255,0.8)); }
+    .volume-slider::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:white; cursor: url('images/homeimages/cursor.png') 42 42, pointer; border:none; filter: drop-shadow(0 0 4px rgba(255,255,255,0.8)); }
+
+        .dropdown-menu {
+            position: fixed;
+            top: 3px;
+            left: 20px;
+            z-index: 100;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .dropdown-button {
+            background-color: transparent;
+            background-image: url('images/homeimages/fullcloud.png');
+            background-size: 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #E78FA5;
+            padding: 60px 80px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            border: none;
+            cursor: url('images/homeimages/cursor.png') 42 42, pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
+            animation: float 3s ease-in-out infinite;
+            display: none; /* hidden by default; becomes visible when .dropdown-menu has .visible */
+        }
+
+        /* Show the button after avatar click */
+        .dropdown-menu.visible .dropdown-button {
+            display: block !important;
+        }
+
+        .dropdown-button:hover { background-color: transparent; }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-image: url('images/dropdowncloud.png');
+            background-size: 153%;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-width: 150px;
+            padding: 45px 25px 50px 25px;
+            z-index: 1;
+            border-radius: 5px;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
+        }
+
+        .dropdown-content a {
+            color: #333;
+            padding: 7px 0;
+            margin: 0 auto;
+            text-decoration: none;
+            display: block;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            line-height: 10px;
+            text-align: center;
+            transition: color 0.3s ease;
+            cursor: url('images/homeimages/cursor.png') 42 42, pointer;
+        }
+
+        .dropdown-content a:hover { color: #E78FA5; }
+        .dropdown-content a.active { color: #E78FA5; font-weight: bold; }
+        .dropdown-menu.menu-open .dropdown-content { display: block; }
+
+        .hidden { display: none !important; }
+
+        /* small responsive tweaks */
+        @media (max-width:900px){ .content-block{ width: 82vw; left: 6vw; top: 58vh; height: 30vh; } .avatar-shifted{ transform: translateX(12vw); } }
+    </style>
+</head>
+<body>
+    <!-- Audio control kept outside the page-root so it stays colored during BW state -->
+    <div id="audio-control" class="audio-control" role="group" aria-label="Audio controls">
+        <button id="volume-button" class="volume-button" title="Audio Control" aria-label="Toggle volume slider" aria-expanded="false">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19"></polygon>
+                <path d="M15 9c1.5 1.5 1.5 3 0 4.5"></path>
+                <path d="M19 5c3 3 3 9 0 12"></path>
+            </svg>
+        </button>
+        <input type="range" id="volume-slider" class="volume-slider hidden" min="0" max="100" value="50" title="Volume">
+    </div>
+
+    <audio id="background-music" loop>
+        <source src="images/internshipimages/internship-music.mp3" type="audio/mpeg">
+        Your browser does not support the audio tag.
+    </audio>
+
+    <div class="page-root" id="pageRoot">
+        <video id="background-video" autoplay muted loop playsinline>
+            <source src="images/internshipimages/internshipbackground.mp4?v=1768040291" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+
+        <div class="overlay" aria-hidden="true"></div>
+
+    <!-- movie intro panels removed for this page -->
+
+        <div class="container">
+            <div class="dropdown-menu">
+                <button class="dropdown-button">Menu</button>
+                <div class="dropdown-content">
+                    <a href="index.html">Home</a>
+                    <a href="about.html">About Me</a>
+                    <a href="internship.html">Internship</a>
+                    <a href="leadership.html">Leadership</a>
+                    <a href="technical.html">Technical</a>
+                    <a href="creative.html">Creative</a>
+                    <a href="questions.html">Questions</a>
+                </div>
+            </div>
+
+            <div class="center-icon" id="avatarContainer">
+                <!-- Default to smiling, colored avatar with blink (open/closed) -->
+                <img id="avatarOpen" class="avatar-internship avatar-open" src="images/homeimages/fullbodyiconsmile-transparent.png" alt="Internship Avatar Color Open (smile)">
+                <img id="avatarClosed" class="avatar-internship avatar-closed" src="images/homeimages/fullbodyiconsmileclosed-transparent.png" alt="Internship Avatar Color Closed (smile)">
+                <!-- Also keep BW variants hidden (not used) -->
+                <img id="avatarBWOpen" class="avatar-internship avatar-open hidden" src="images/homeimages/fullbodyicon-transparent.png" alt="Internship Avatar Open BW">
+                <img id="avatarBWClosed" class="avatar-internship avatar-closed hidden" src="images/homeimages/fullbodyiconclosed-transparent.png" alt="Internship Avatar Closed BW">
+            </div>
+
+            <!-- Content block hidden initially; slides in when avatar toggles -->
+            <div id="contentBlock" class="content-block" aria-hidden="true">
+                <h2>Internship Experience</h2>
+                <div class="accordion-item">
+                    <button class="accordion-button" data-target="twoSigma" aria-expanded="true"><span class="position-title">Software Engineering Intern</span><span class="meta"><a class="company" href="https://www.twosigma.com" target="_blank" rel="noopener noreferrer">Two Sigma</a><span class="sep">•</span><span class="accordion-date">May 2026 - August 2026</span><span class="sep">•</span><a class="view-blog" href="#" data-href="">View Blog</a></span></button>
+                    <div id="twoSigma" class="accordion-content" aria-hidden="false">
+                        <ul>
+                            <li>See you in summer 2026!</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-button" data-target="amazon" aria-expanded="true"><span class="position-title">Software Development Engineering Intern</span><span class="meta"><a class="company" href="https://www.amazonrobotics.com" target="_blank" rel="noopener noreferrer">Amazon Robotics</a><span class="sep">•</span><span class="accordion-date">August 2025 - December 2025</span><span class="sep">•</span><a class="view-blog" href="#" data-href="">View Blog</a></span></button>
+                    <div id="amazon" class="accordion-content" aria-hidden="false">
+                        <ul>
+                            <li>Developed a web application using React, enabling the visualization and linking of relevant data across multiple independent subsystems within the robotic machine system, allowing for comprehensive tracking of an item’s path through the system</li>
+                            <li>Integrated AWS Lambda functions for backend processing with dynamic data loading and filtering, improving load times by 98% and enabling product managers, operations teams, and data engineers to access insights in near real time.</li>
+                            <li>Facilitated alignment among 20+ cross-functional partners (designers, PMs, and developers) and synthesized insights from 75+ user surveys, enhancing the web application’s utility and boosting adoption rate by 25% within the first quarter</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-button" data-target="tradeDesk" aria-expanded="true"><span class="position-title">Full Stack Software Engineering Intern</span><span class="meta"><a class="company" href="https://www.thetradedesk.com" target="_blank" rel="noopener noreferrer">The Trade Desk</a><span class="sep">•</span><span class="accordion-date">May 2025 - August 2025</span><span class="sep">•</span><a class="view-blog" href="#" data-href="">View Blog</a></span></button>
+                    <div id="tradeDesk" class="accordion-content" aria-hidden="false">
+                        <ul>
+                            <li>Fully developed a web application for a data-visualization tool that generated reports on user metrics such as incremental impressions, providing actionable insights into TV advertisement growth and driving a 15% increase in TV ad sales across campaigns</li>
+                            <li>Engineered responsive dashboards used by 200+ internal stakeholders across finance and product teams, combining React.js/TypeScript with D3.js for visualizations and C# & ASP.NET for backend logic, resulting in a 40% improvement in backend data processing efficiency</li>
+                            <li>Designed REST API workflows using JSON, standardizing frontend-backend interactions for future integrations through Kubernetes and Docker, improving deployment speed by 25%</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <button class="accordion-button" data-target="viettel" aria-expanded="true"><span class="position-title">Backend Software Engineering Intern</span><span class="meta"><a class="company" href="https://viettel.com.vn" target="_blank" rel="noopener noreferrer">Viettel Software</a><span class="sep">•</span><span class="accordion-date">May 2024 - August 2024</span><span class="sep">•</span><a class="view-blog" href="#" data-href="">View Blog</a></span></button>
+                    <div id="viettel" class="accordion-content" aria-hidden="false">
+                        <ul>
+                            <li>Implemented a system to monitor uptime of 10,000+ servers using Go with Gin Framework and OpenAPI, and authentication via JWT; developed the backend with multiple microservices interlinked by gRPC, protobuf and Jenkins</li>
+                            <li>Utilized Redis Cache, Elasticsearch, PostgreSQL to create features for server management, including creation, updates, checks, and reporting, ensuring reliability with robust error handling, logging, and rotation</li>
+                            <li>Improved unit test coverage for the backend from 63% to 91%, deploying multiple Docker containers for integration testing</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Minimal helpers and core cinematic behavior for internship page
+        const pageRoot = document.getElementById('pageRoot');
+    const avatarOpen = document.getElementById('avatarOpen');
+    const avatarClosed = document.getElementById('avatarClosed');
+    const avatarBWOpen = document.getElementById('avatarBWOpen');
+    const avatarBWClosed = document.getElementById('avatarBWClosed');
+        const contentBlock = document.getElementById('contentBlock');
+        const backgroundVideo = document.getElementById('background-video');
+    const bgAudio = document.getElementById('background-music');
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+    const dropdownButton = document.querySelector('.dropdown-button');
+    const dropdownLinks = document.querySelectorAll('.dropdown-content a');
+
+        let isOpen = false; // color mode
+
+        // Run the opening intro: panels slide out leaving the persistent bars visible
+        // Opening/closing cinematic panels removed for internship page
+
+        // Toggle open/close: show/hide content block but keep the page in color mode and keep avatars colored
+        function toggleOpen() {
+            isOpen = !isOpen;
+
+            const containerEl = document.querySelector('.container');
+
+            if (isOpen) {
+                // switch to color (ensure color-mode classes present)
+                if (pageRoot) pageRoot.classList.add('color-mode');
+
+                // show color avatars and hide BW variants
+                if (avatarOpen) {
+                    avatarOpen.classList.remove('hidden');
+                    // switch to internship code smile image when opened
+                    avatarOpen.src = 'images/internshipimages/fullbodyiconcodesmile-transparent.png';
+                }
+                if (avatarClosed) {
+                    avatarClosed.classList.remove('hidden');
+                    avatarClosed.src = 'images/internshipimages/fullbodyiconcodesmileclosed-transparent.png';
+                }
+                if (avatarBWOpen) avatarBWOpen.classList.add('hidden');
+                if (avatarBWClosed) avatarBWClosed.classList.add('hidden');
+
+                // shift the avatar container to the right (visual)
+                const avatarContainerEl = document.getElementById('avatarContainer');
+                if (avatarContainerEl) avatarContainerEl.classList.add('shifted');
+
+                // show content block
+                contentBlock.classList.add('active');
+
+                // Reveal any accordion items already in view after the content block's transition completes
+                if (typeof window.revealInternshipNow === 'function'){
+                    const onTransition = (ev) => {
+                        if (ev.propertyName === 'transform' || ev.propertyName === 'opacity') {
+                            try { window.revealInternshipNow(); } catch(e){}
+                        }
+                    };
+                    contentBlock.addEventListener('transitionend', onTransition, { once: true });
+                    setTimeout(()=>{ try { window.revealInternshipNow(); } catch(e){} }, 900);
+                }
+
+                // mark the background video as colored
+                if (backgroundVideo) backgroundVideo.classList.add('color');
+
+                // add color-mode to container
+                if (containerEl) containerEl.classList.add('color-mode');
+
+                // Show dropdown button when avatar expands
+                if (dropdownMenu) dropdownMenu.classList.add('visible');
+
+                // start/fade-in audio
+                if (bgAudio) fadeAudioTo(0.18, 1000);
+            } else {
+                // collapse: hide content block and reset avatar container position; keep color-mode
+                const avatarContainerEl2 = document.getElementById('avatarContainer');
+                if (avatarContainerEl2) avatarContainerEl2.classList.remove('shifted');
+                contentBlock.classList.remove('active');
+                // revert avatars back to the shared smiling homepage images
+                if (avatarOpen) avatarOpen.src = 'images/homeimages/fullbodyiconsmile-transparent.png';
+                if (avatarClosed) avatarClosed.src = 'images/homeimages/fullbodyiconsmileclosed-transparent.png';
+                if (dropdownMenu) { dropdownMenu.classList.remove('menu-open'); dropdownMenu.classList.remove('visible'); }
+                if (bgAudio) fadeAudioTo(0.0, 420);
+            }
+        }
+
+        function fadeAudioTo(targetVolume, durationMs){
+            if (!bgAudio) return;
+            const start = bgAudio.volume || 0;
+            const delta = targetVolume - start;
+            const steps = Math.max(6, Math.floor(durationMs / 30));
+            let i = 0;
+            const iv = setInterval(()=>{
+                i++;
+                const t = i/steps;
+                bgAudio.volume = Math.max(0, Math.min(1, start + delta * t));
+                if (i>=steps){ clearInterval(iv); if (targetVolume===0) bgAudio.pause(); else { bgAudio.play().catch(()=>{}); } }
+            }, Math.max(10, Math.floor(durationMs/steps)));
+        }
+
+        // Start: ensure colored avatars visible and background ready
+        window.addEventListener('load', ()=>{
+            try {
+                if (avatarOpen) avatarOpen.classList.remove('hidden');
+                if (avatarClosed) avatarClosed.classList.remove('hidden');
+                if (avatarBWOpen) avatarBWOpen.classList.add('hidden');
+                if (avatarBWClosed) avatarBWClosed.classList.add('hidden');
+            } catch(e) {}
+
+            // Ensure the internship page defaults to color-mode (no black & white)
+            try {
+                if (pageRoot) pageRoot.classList.add('color-mode');
+                if (backgroundVideo) backgroundVideo.classList.add('color');
+            } catch (e) { console.debug('Could not set color-mode on load', e); }
+
+            // ensure background video loops cleanly
+            if (backgroundVideo){
+                backgroundVideo.addEventListener('ended', ()=>{ backgroundVideo.currentTime = 0; backgroundVideo.play().catch(()=>{}); });
+                backgroundVideo.addEventListener('timeupdate', ()=>{ if (backgroundVideo.duration && backgroundVideo.currentTime >= backgroundVideo.duration - 0.5){ backgroundVideo.currentTime = 0; backgroundVideo.play().catch(()=>{}); } });
+                backgroundVideo.play().catch(()=>{});
+            }
+
+            // Background audio fade-in
+            if (bgAudio){
+                bgAudio.volume = 0;
+                bgAudio.loop = true;
+                const playPromise = bgAudio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(()=>{ fadeAudioTo(0.18, 1000); }).catch((err)=>{ console.debug('Autoplay prevented:', err); });
+                }
+            }
+
+            // Preload internship-specific code smile avatars so the swap is instant
+            try {
+                const a = new Image(); a.src = 'images/internshipimages/fullbodyiconcodesmile-transparent.png';
+                const b = new Image(); b.src = 'images/internshipimages/fullbodyiconcodesmileclosed-transparent.png';
+            } catch (e) { console.debug('Preload failed for internship avatars', e); }
+        });
+
+    // Scroll-reveal observer for accordion items and headings inside #contentBlock
+    (function setupInternshipReveal(){
+        const contentBlockEl = document.getElementById('contentBlock');
+        if (!contentBlockEl) return;
+
+        const targets = Array.from(contentBlockEl.querySelectorAll('.accordion-item, h2, h3'));
+        if (!targets.length) return;
+
+        // make accordion-items keyboard-focusable
+        targets.forEach(t => { if (t.classList && t.classList.contains('accordion-item')) t.setAttribute('tabindex','0'); });
+
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const el = entry.target;
+                    const idx = targets.indexOf(el);
+                    setTimeout(() => el.classList.add('visible'), Math.min(300, idx * 60));
+                    obs.unobserve(el);
+                }
+            });
+        }, { root: contentBlockEl, rootMargin: '0px 0px -12px 0px', threshold: 0.08 });
+
+        targets.forEach(t => observer.observe(t));
+
+        // helper to synchronously reveal currently-visible targets (used after contentBlock opens)
+        window.revealInternshipNow = function(){
+            const rect = contentBlockEl.getBoundingClientRect();
+            targets.forEach((el, idx) => {
+                if (el.classList.contains('visible')) return;
+                const r = el.getBoundingClientRect();
+                const top = r.top - rect.top; const bottom = r.bottom - rect.top;
+                const isVisible = (top < contentBlockEl.clientHeight) && (bottom > 0);
+                if (isVisible) setTimeout(()=>el.classList.add('visible'), Math.min(300, idx*60));
+            });
+        };
+    })();
+
+    // Wire avatar click - bind visible color avatars (smile) and hidden BW variants remain unused
+    if (avatarOpen) avatarOpen.addEventListener('click', toggleOpen);
+    if (avatarClosed) avatarClosed.addEventListener('click', toggleOpen);
+    if (avatarBWOpen) avatarBWOpen.addEventListener('click', toggleOpen);
+    if (avatarBWClosed) avatarBWClosed.addEventListener('click', toggleOpen);
+
+        // Highlight current page in dropdown
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        dropdownLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href === currentPage || (currentPage === '' && href === 'index.html')) {
+                link.classList.add('active');
+            }
+        });
+
+        // Parallax effect - background follows cursor (match homepage/about behavior)
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const maxOffset = 5; // small movement to avoid visible gaps
+        document.addEventListener('mousemove', (e) => {
+            const centerX = windowWidth / 2;
+            const centerY = windowHeight / 2;
+            const offsetX = (e.clientX - centerX) / centerX;
+            const offsetY = (e.clientY - centerY) / centerY;
+            const translateX = offsetX * maxOffset;
+            const translateY = offsetY * maxOffset;
+            if (backgroundVideo) backgroundVideo.style.transform = `translate(${translateX}px, ${translateY}px)`;
+        });
+
+        // Normalize accordion date text: convert months to 3-letter abbreviations and format like 'May 2026 - Aug 2026'
+        (function normalizeDates(){
+            const map = {
+                'january': 'Jan', 'february': 'Feb', 'march': 'Mar', 'april': 'Apr', 'may': 'May', 'june': 'Jun',
+                'july': 'Jul', 'august': 'Aug', 'september': 'Sep', 'october': 'Oct', 'november': 'Nov', 'december': 'Dec',
+                'jan': 'Jan', 'feb': 'Feb', 'mar': 'Mar', 'apr': 'Apr', 'jun': 'Jun', 'jul': 'Jul', 'aug': 'Aug', 'sep': 'Sep', 'oct': 'Oct', 'nov': 'Nov', 'dec': 'Dec'
+            };
+
+            const dateEls = document.querySelectorAll('.accordion-date');
+            dateEls.forEach(el => {
+                const text = el.textContent.trim();
+                // Expect formats like 'Month YYYY - Month YYYY' but be forgiving
+                const parts = text.split('-').map(s => s.trim());
+                if (parts.length === 2) {
+                    const left = parts[0].split(' ');
+                    const right = parts[1].split(' ');
+
+                    // Preserve 'Present' on the right side if present
+                    const rightRaw = parts[1].toLowerCase();
+                    const isRightPresent = /present/.test(rightRaw);
+
+                    const leftMonth = left[0] ? map[left[0].toLowerCase()] || (left[0].slice(0,1).toUpperCase()+left[0].slice(1,3).toLowerCase()) : '';
+                    const leftYear = left[left.length-1] || '';
+                    let rightMonth = '';
+                    let rightYear = '';
+                    if (isRightPresent) {
+                        rightMonth = 'Present';
+                    } else {
+                        rightMonth = right[0] ? map[right[0].toLowerCase()] || (right[0].slice(0,1).toUpperCase()+right[0].slice(1,3).toLowerCase()) : '';
+                        rightYear = right[right.length-1] || '';
+                    }
+
+                    const formatted = isRightPresent ? `${leftMonth} ${leftYear} - Present` : `${leftMonth} ${leftYear} - ${rightMonth} ${rightYear}`.trim();
+                    el.textContent = formatted;
+                } else {
+                    // Fallback: lowercase then capitalize first character
+                    let lowered = text.toLowerCase();
+                    lowered = lowered.replace(/^([a-z])/, (m,c)=>c.toUpperCase());
+                    el.textContent = lowered;
+                }
+            });
+        })();
+
+        // When the visible button is clicked, toggle the actual dropdown content
+        if (dropdownButton) {
+            dropdownButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('menu-open');
+            });
+        }
+
+        // Helper: run closing outro (adapted from About page) — creates closing panels, fades audio, then navigates
+        function runClosingOutro(navigateTo) {
+            const closingLeft = document.createElement('div');
+            const closingRight = document.createElement('div');
+
+            closingLeft.style.cssText = `
+                position: fixed;
+                top: -6vh;
+                left: calc(-1 * var(--bar-overhang));
+                width: calc(100% + (var(--bar-overhang) * 2));
+                height: calc(100vh + 12vh);
+                background-color: #000;
+                z-index: 9998;
+                transform: translateX(calc(-100vw - var(--bar-total)));
+                animation: closeLeft 2.5s ease-in-out forwards;
+                pointer-events: none;
+            `;
+
+            closingRight.style.cssText = `
+                position: fixed;
+                top: -6vh;
+                left: calc(-1 * var(--bar-overhang));
+                width: calc(100% + (var(--bar-overhang) * 2));
+                height: calc(100vh + 12vh);
+                background-color: #000;
+                z-index: 9998;
+                transform: translateX(calc(100vw + var(--bar-total)));
+                animation: closeRight 2.5s ease-in-out forwards;
+                pointer-events: none;
+            `;
+
+            if (pageRoot) {
+                pageRoot.style.animation = 'closingBlur 2.5s ease-in-out forwards';
+                pageRoot.appendChild(closingLeft);
+                pageRoot.appendChild(closingRight);
+            } else {
+                document.body.style.animation = 'closingBlur 2.5s ease-in-out forwards';
+                document.body.appendChild(closingLeft);
+                document.body.appendChild(closingRight);
+            }
+
+            // Fade audio if present
+            const backgroundAudio = document.getElementById('background-music');
+            const anyAudio = backgroundAudio || document.querySelector('audio');
+            if (anyAudio) {
+                const fadeOutDuration = 300; // ms
+                const fadeOutInterval = 30;
+                const steps = fadeOutDuration / fadeOutInterval;
+                let currentStep = 0;
+                const originalVolume = anyAudio.volume;
+                const fadeTimer = setInterval(() => {
+                    currentStep++;
+                    const progress = currentStep / steps;
+                    anyAudio.volume = originalVolume * (1 - progress);
+                    if (progress >= 1) {
+                        clearInterval(fadeTimer);
+                        anyAudio.pause();
+                        anyAudio.volume = originalVolume;
+                    }
+                }, fadeOutInterval);
+            }
+
+            if (navigateTo) {
+                try {
+                    if (navigateTo.indexOf('index.html') !== -1 || navigateTo === '' || navigateTo === '/') {
+                        sessionStorage.removeItem('introShown');
+                    }
+                } catch (e) {
+                    console.debug('Could not access sessionStorage:', e);
+                }
+                setTimeout(() => {
+                    window.location.href = navigateTo;
+                }, 2500);
+            }
+        }
+
+        // Add navigation to dropdown links (use closing outro before navigating)
+        dropdownLinks.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const href = this.getAttribute('href');
+                runClosingOutro(href);
+            });
+        });
+
+        // Close dropdown when clicking outside (ignore clicks on avatar and content block)
+        document.addEventListener('click', function(event) {
+            const avatarContainer = document.getElementById('avatarContainer');
+            const contentBlockEl = document.getElementById('contentBlock');
+            // If the click is inside the dropdown, avatar, or content block, do nothing.
+            if (dropdownMenu.contains(event.target) || (avatarContainer && avatarContainer.contains(event.target)) || (contentBlockEl && contentBlockEl.contains(event.target))) {
+                return;
+            }
+
+            dropdownMenu.classList.remove('menu-open');
+            // Also hide the button if menu is closed
+            dropdownMenu.classList.remove('visible');
+        });
+
+        // Accordion behavior removed: all internship entries are expanded by default.
+        // Company links and 'View Blog' anchors remain active as normal links.
+
+    // Audio controls (volume button + slider). Keep them outside page-root in DOM so they stay colored.
+    const volumeButton = document.getElementById('volume-button');
+    const volumeSlider = document.getElementById('volume-slider');
+    const audioControl = document.getElementById('audio-control');
+        if (volumeButton && volumeSlider){
+            volumeButton.addEventListener('click', function(e){ e.stopPropagation(); volumeSlider.classList.toggle('hidden'); audioControl.classList.toggle('expanded'); if (!volumeSlider.classList.contains('hidden')) volumeSlider.focus(); });
+            document.addEventListener('click', function(e){ if (!audioControl.contains(e.target)){ volumeSlider.classList.add('hidden'); audioControl.classList.remove('expanded'); } });
+            volumeSlider.addEventListener('input', function(e){ const v = parseInt(e.target.value)/100; if (bgAudio) bgAudio.volume = v; });
+        }
+    </script>
+</body>
+</html>
