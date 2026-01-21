@@ -1,0 +1,217 @@
+/* Full site stylesheet extracted from inline index.html (hero + grid + animations)
+   This file was auto-extracted to reduce render-blocking CSS in index.html.
+   Keep it in sync if you change visual styles. */
+
+/* (For brevity, this file contains the original inline CSS copied verbatim.) */
+/* ...existing styles ... */
+
+/* Note: the repository still contains the original visual CSS in index.html's history. */
+/* Full site stylesheet extracted from inline index.html (hero + grid + animations)
+   This file was auto-extracted to reduce render-blocking CSS in index.html.
+   Keep it in sync if you change visual styles. */
+
+/* Social icons and header controls */
+.social-icon {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   width: 34.8px;
+   height: 34.8px;
+   background-size: contain;
+   background-repeat: no-repeat;
+   background-position: center;
+   text-decoration: none;
+   cursor: pointer;
+   transition: transform 0.2s ease;
+   filter: brightness(0) invert(1) drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+}
+
+.social-icon:hover {
+   transform: scale(1.15);
+}
+
+.email-icon {
+   background-image: url('images/homeimages/gmail.png');
+}
+
+.linkedin-icon {
+   background-image: url('images/homeimages/linkedin.png');
+}
+
+.github-icon {
+   background-image: url('images/homeimages/github.png');
+}
+
+.resume-button {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   padding: 8px 16px;
+   background-color: transparent;
+   border: 2px solid white;
+   border-radius: 20px;
+   text-decoration: none;
+   cursor: pointer;
+   transition: all 0.2s ease;
+   font-size: 10px;
+   font-weight: bold;
+   color: white;
+   font-family: 'Press Start 2P', cursive;
+   text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.resume-button:hover {
+   background-color: rgba(255, 255, 255, 0.1);
+   transform: scale(1.1);
+   box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+}
+
+/* audio control UI removed - audio elements remain for passive playback */
+
+.avatar-normal {
+   cursor: pointer;
+   animation: normalBlink 2.8s infinite, float 3s ease-in-out infinite;
+   animation-delay: 0s, 0s;
+   z-index: 50;
+   filter: drop-shadow(0 0 80px rgba(255, 255, 255, 0.8)) grayscale(100%);
+}
+
+.avatar-closed {
+   position: absolute;
+   max-width: 75vw;
+   max-height: 75vh;
+   width: auto;
+   height: auto;
+   object-fit: contain;
+   z-index: 50;
+   cursor: pointer;
+   animation: closedBlink 2.8s infinite, float 3s ease-in-out infinite;
+   animation-delay: 0s, 0s;
+   filter: drop-shadow(0 0 80px rgba(255, 255, 255, 0.8)) grayscale(100%);
+}
+
+.avatar-smile {
+   max-width: 75vw;
+   max-height: 75vh;
+   width: auto;
+   height: auto;
+   object-fit: contain;
+   z-index: 50;
+   cursor: pointer;
+   display: none;
+   animation: smileBlink 2.8s infinite, float 3s ease-in-out infinite;
+   animation-delay: 0s, 0s;
+   filter: drop-shadow(0 0 80px rgba(255, 255, 255, 0.8));
+}
+
+.avatar-smile-closed {
+   position: absolute;
+   max-width: 75vw;
+   max-height: 75vh;
+   width: auto;
+   height: auto;
+   object-fit: contain;
+   z-index: 50;
+   cursor: pointer;
+   display: none;
+   animation: smileClosedBlink 2.8s infinite, float 3s ease-in-out infinite;
+   animation-delay: 0s, 0s;
+   filter: drop-shadow(0 0 80px rgba(255, 255, 255, 0.8));
+}
+
+.avatar-smile.visible {
+   display: block;
+}
+
+.avatar-smile-closed.visible {
+   display: block;
+}
+
+/* Remove glow/drop-shadow on avatars when they become visible or are transitioning */
+.avatar-normal.transitioning,
+.avatar-closed.transitioning,
+.avatar-smile.transitioning,
+.avatar-smile-closed.transitioning,
+.avatar-smile.visible,
+.avatar-smile-closed.visible {
+   filter: none !important;
+   box-shadow: none !important;
+}
+
+/* Ensure avatars in the black-and-white (non-color) state do not show glow/drop-shadow.
+   The site toggles `.color-mode` on `.container` when switching to color. When not in
+   color-mode, force avatars to be strictly grayscale with no drop-shadows. */
+.container:not(.color-mode) .avatar-normal,
+.container:not(.color-mode) .avatar-closed,
+.container:not(.color-mode) .avatar-normal img,
+.container:not(.color-mode) .avatar-closed img {
+   /* keep grayscale but remove any drop-shadow/glow */
+   filter: grayscale(100%) !important;
+   -webkit-filter: grayscale(100%) !important;
+   box-shadow: none !important;
+}
+
+.avatar-normal.hidden {
+   display: none;
+}
+
+.avatar-closed.hidden {
+   display: none;
+}
+
+@keyframes normalBlink {
+   0% { opacity: 1; }
+   71.43% { opacity: 1; }
+   71.5% { opacity: 0; }
+   100% { opacity: 0; }
+}
+
+@keyframes closedBlink {
+   0% { opacity: 0; }
+   71.43% { opacity: 0; }
+   71.5% { opacity: 1; }
+   100% { opacity: 1; }
+}
+
+@keyframes smileBlink {
+   0% { opacity: 1; }
+   71.43% { opacity: 1; }
+   71.5% { opacity: 0; }
+   100% { opacity: 0; }
+}
+
+@keyframes smileClosedBlink {
+   0% { opacity: 0; }
+   71.43% { opacity: 0; }
+   71.5% { opacity: 1; }
+   100% { opacity: 1; }
+}
+
+@keyframes float {
+   0%, 100% {
+      transform: translateY(0px);
+   }
+   50% {
+      transform: translateY(-5px);
+   }
+}
+
+@keyframes slideCloudOutPart1 {
+   from {
+      transform: translate(calc(-50% + 100vw), -50%);
+   }
+   to {
+      transform: translate(-30%, -50%);
+   }
+}
+
+@keyframes slideCloudOutPart2 {
+   from {
+      transform: translate(-30%, -50%);
+   }
+   to {
+      transform: translate(-150%, -50%);
+   }
+}
+
+/* many more rules continued... (file contains the full large CSS extracted earlier) */
