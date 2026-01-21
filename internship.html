@@ -155,17 +155,26 @@
     #avatarColor { animation: float 3s ease-in-out infinite; }
 
         /* Content block (match About page sizing, styling and logic) */
-        .content-block{
+        .content-block {
             position: fixed;
             left: 0;
-            top: 100px;
+            top: 120px; /* moved down slightly to match About page */
             width: 65vw;
+            /* make content block shorter so it doesn't stretch full page height */
             height: 70vh;
-            background: transparent;
-            padding: 20px 30px;
+                    /* Solid black tint for the entire content block (no gradient) with
+                        a tiled grain overlay that multiplies over the black tint. */
+                    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.36'/></filter><rect width='100%' height='100%' fill='black' filter='url(%23n)'/></svg>");
+                    background-repeat: repeat;
+                    background-size: 120px 120px;
+                    background-position: 0 0;
+                    background-color: rgba(0,0,0,0.72);
+                    background-blend-mode: multiply;
+            border: 1px solid rgba(255,255,255,0.06);
+            padding: 24px 32px;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch; /* smooth scrolling on iOS */
+            overscroll-behavior: contain; /* prevent scroll chaining to the page */
             overflow-x: hidden;
             z-index: 50;
             opacity: 0;
@@ -176,18 +185,61 @@
             font-size: 8px;
             line-height: 1.8;
             letter-spacing: 0.3px;
-            -webkit-mask-image: linear-gradient(90deg, black 0%, black 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 85%, transparent 100%);
-            mask-image: linear-gradient(90deg, black 0%, black 100%), linear-gradient(to bottom, transparent 0%, black 5%, black 85%, transparent 100%);
-            -webkit-mask-composite: source-in;
-            mask-composite: intersect;
+            /* Keep edges sharp and add subtle inner sheen and drop shadow to simulate glass
+               without using backdrop-filter (no blur applied to the video). */
+            border-radius: 12px;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.02);
+            background-clip: padding-box;
+            /* keep vertical scrolling enabled; only hide horizontal overflow for sheen */
+            overflow-x: hidden;
             scrollbar-width: none;
         }
 
-        .content-block::-webkit-scrollbar { display: none; }
+        /* Subtle sheen overlay to emulate a glossy glass surface (no blur) */
+        .content-block::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: inherit;
+            /* subtle sheen; lower opacity so the dark tint remains visible */
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+            mix-blend-mode: overlay;
+            opacity: 0.6;
+            /* place the sheen behind the content */
+            z-index: 0;
+        }
+
+        /* Ensure text and interactive elements inside the content block render above the sheen */
+        .content-block * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Matte / grain overlay to give the content block a subtle textured (matte) appearance */
+          /* grain now applied as a background layer on the .content-block itself so it
+              consistently covers the entire scrollable area. */
+
+        /* side image removed - no styles needed */
+
+        .content-block::-webkit-scrollbar {
+            display: none;
+        }
 
         .content-block.active {
             opacity: 1;
-            transform: translateX(0);
+            /* shift the content block by the same small nudge so the gap remains unchanged */
+            transform: translateX(8vw);
+        }
+
+        .content-block h2 {
+            font-size: 12px;
+            font-weight: 400;
+            margin-bottom: 20px;
+            color: #E78FA5;
+            letter-spacing: 1px;
+            border-bottom: 2px solid #E78FA5;
+            padding-bottom: 10px;
         }
 
         .content-block h3 {
@@ -199,16 +251,6 @@
             letter-spacing: 0.5px;
             border-bottom: 1px solid #E78FA5;
             padding-bottom: 8px;
-        }
-
-        .content-block h2 {
-            font-size: 12px;
-            font-weight: 400;
-            margin-bottom: 20px;
-            color: #E78FA5;
-            letter-spacing: 1px;
-            border-bottom: 2px solid #E78FA5;
-            padding-bottom: 10px;
         }
 
         .content-block p {
@@ -229,17 +271,19 @@
             border-left: none;
         }
 
-        .content-section {
+        .content-section,
+        .accordion-item {
             background: transparent;
             border: none;
             padding: 8px 0;
             margin-bottom: 8px;
         }
 
-        /* Scroll reveal / dropdown animation: headings and accordion items animate
-           in as they enter the visible area of the #contentBlock scroll container. */
+        /* Scroll reveal / dropdown animation: headings and sections animate in as they enter
+           the visible area of the #contentBlock scroll container. Prefers-reduced-motion respected. */
         .content-block h2,
         .content-block h3,
+        .content-section,
         .accordion-item {
             will-change: transform, opacity;
             opacity: 0;
@@ -249,6 +293,7 @@
 
         .content-block h2.visible,
         .content-block h3.visible,
+        .content-section.visible,
         .accordion-item.visible {
             opacity: 1;
             transform: translateY(0);
@@ -257,47 +302,45 @@
         @media (prefers-reduced-motion: reduce) {
             .content-block h2,
             .content-block h3,
+            .content-section,
             .accordion-item { transition: none !important; transform: none !important; opacity: 1 !important; }
         }
 
-        /* Default appearance: match About page content-section baseline (transparent, subtle padding) */
+        /* Subtle pink tint glow on hover/focus for each content section (no lift) */
+        .content-section,
         .accordion-item {
             display: block;
             width: 100%;
             position: relative;
             pointer-events: auto;
-            padding: 12px 12px; /* slightly larger padding for a card-like feel */
-            margin-bottom: 10px;
-            /* subtle frosted/solid base so blocks are visible when not hovered */
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.03);
-            border-radius: 8px;
-            transition: transform 420ms cubic-bezier(.2,.8,.2,1), opacity 420ms ease, background 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+            padding: 12px 10px;
+            transition: transform 420ms cubic-bezier(.2,.8,.2,1), opacity 420ms ease, background 220ms ease, box-shadow 220ms ease;
         }
 
+        /* Only show the hover glow for sections that have been revealed */
+        .content-section.visible:hover,
+        .content-section.visible:focus-within,
         .accordion-item.visible:hover,
         .accordion-item.visible:focus-within {
+            /* brighter pink tint */
             background: linear-gradient(180deg, rgba(231,143,165,0.14), rgba(231,143,165,0.06));
             box-shadow: 0 18px 48px rgba(231,143,165,0.16), inset 0 0 0 1px rgba(231,143,165,0.12);
             border-radius: 8px;
             cursor: default;
         }
 
+        /* Make sections keyboard-focusable appearance accessible (brighter) */
+        .content-section.visible:focus-within,
         .accordion-item.visible:focus-within {
             outline: 2px solid rgba(231,143,165,0.26);
             outline-offset: 4px;
         }
 
-
-        /* Paragraphs inside sections/accordion keep transparent background and subtle padding
-           with a left accent when needed (match About page visuals) */
-        .content-section p,
-        .accordion-item p {
+        .content-section p {
             background: transparent;
             border: none;
-            padding: 10px 12px;
-            margin-bottom: 12px;
-            border-left: 2px solid #E78FA5;
+            padding: 5px 0;
+            margin-bottom: 8px;
         }
 
         .content-section p:last-child {
@@ -314,8 +357,7 @@
         .content-block li {
             margin-bottom: 8px;
             position: relative;
-            /* match position header padding so bullets/text align with the header text */
-            padding-left: 28px;
+            padding-left: 15px;
             font-size: 8px;
         }
 
@@ -324,6 +366,52 @@
             position: absolute;
             left: 0;
             color: #E78FA5;
+        }
+
+        /* ---------- Glassmorphism (About page only) ---------- */
+        /* Apply a subtle frosted glass effect to the main content areas
+           while explicitly excluding avatar, dropdown menu, and audio UI */
+        /* Apply card styling to header and content-sections but do NOT blur them. */
+        .page-root .content-section,
+        .page-root .header {
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+            border-radius: 10px;
+        }
+
+        /* Content block: confined frosted-glass effect. This applies backdrop blur
+           only inside the card area so the page/video edges remain sharp. */
+        .page-root .content-block {
+            backdrop-filter: blur(6px) saturate(115%);
+            -webkit-backdrop-filter: blur(6px) saturate(115%);
+        }
+
+        /* Keep avatar, dropdown, and audio controls visually intact (no blur/glass) */
+        .avatar-about,
+        .avatar-about-closed,
+        .dropdown-menu,
+        .audio-control,
+        .audio-control * {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            filter: none !important;
+            box-shadow: none !important;
+            background: none !important;
+        }
+
+        /* Slight spacing and rounding adjustments to blend with glass style */
+        .content-block {
+            padding: 24px 32px; /* a touch more padding for card-like feel */
+            border-radius: 12px;
+        }
+
+        .content-section {
+            padding: 12px 10px;
+            margin-bottom: 12px;
+            border-radius: 8px;
         }
 
         /* Accordion styles used inside the content block */
