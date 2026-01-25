@@ -1095,10 +1095,10 @@
         display: block; /* ensure it sits on its own line under the name */
         width: 100%;
         text-align: center;
-        opacity: 0.08; /* start faded like the name parts */
-        filter: blur(4px) brightness(0.6);
-        transform: translateZ(0) translateY(4px) scale(0.995);
-        transition: opacity 1200ms ease, filter 1200ms ease, transform 1200ms ease;
+    opacity: 0.08; /* start faded like the name parts */
+    filter: blur(4px) brightness(0.6);
+    transform: translateZ(0) translateY(4px) scale(0.995);
+    transition: opacity 1200ms ease, filter 1200ms ease, transform 1200ms ease;
         -webkit-font-smoothing: none;
         -moz-osx-font-smoothing: grayscale;
         image-rendering: pixelated;
@@ -1536,8 +1536,10 @@
                             
                             // Fade out music before navigation
                             // Show cross-fade overlay and fade out the homepage background video for a smooth transition
-                            try { const overlay = document.getElementById('crossfade-overlay'); if (overlay) overlay.style.opacity = '1'; } catch(e) {}
-                            try { if (backgroundVideo) backgroundVideo.style.opacity = '0'; } catch(e) {}
+                            // Do not trigger the cross-fade overlay or fade the background video here
+                            // so the closing bars animation remains visible.
+                            try { const overlay = document.getElementById('crossfade-overlay'); if (overlay) overlay.style.opacity = '0'; } catch(e) {}
+                            try { /* intentionally left blank to avoid fading backgroundVideo */ } catch(e) {}
                             const backgroundMusic = document.getElementById('background-music');
                             const smileMusic = document.getElementById('smile-music');
                             const currentAudio = blocksVisible ? smileMusic : backgroundMusic;
@@ -1566,7 +1568,7 @@
                                         // Append a cache-busting timestamp so the destination page loads
                                         // a fresh copy instead of a potentially cached one.
                                         const url = navigateToRaw + (navigateToRaw.includes('?') ? '&' : '?') + 'from=home' + '&_=' + Date.now();
-                                        navigateAfterSlide(url);
+                                        runClosingBars(url);
                                     }
                                 }
                             }, fadeOutInterval);
@@ -1752,14 +1754,16 @@
                                                 // Append cache-busting timestamp to avoid loading a stale cached page
                                                 const urlWithParam = url + (url.includes('?') ? '&' : '?') + 'from=home' + '&_=' + Date.now();
                                                 // Show cross-fade overlay and fade out the homepage background video immediately to avoid a visual pop
-                                                try { const overlay = document.getElementById('crossfade-overlay'); if (overlay) overlay.style.opacity = '1'; } catch(e) {}
-                                                try { if (backgroundVideo) backgroundVideo.style.opacity = '0'; } catch(e) {}
-                                                navigateAfterSlide(urlWithParam);
+                                                // Keep cross-fade overlay hidden so closing bars are visible
+                                                try { const overlay = document.getElementById('crossfade-overlay'); if (overlay) overlay.style.opacity = '0'; } catch(e) {}
+                                                try { /* backgroundVideo opacity intentionally left unchanged */ } catch(e) {}
+                                                runClosingBars(urlWithParam);
                                             }
                             }
                         }, fadeOutInterval);
                     } else {
-                        window.location.href = url;
+                        // Use closing bars for immediate navigation as well so transition is consistent
+                        runClosingBars(url);
                     }
                 }
             });
@@ -2047,6 +2051,84 @@
             // Add a small buffer to ensure the visual transition completes
             const buffer = 60;
             setTimeout(() => { window.location.href = navigateTo; }, slideMs + buffer);
+        } catch (e) {
+            try { window.location.href = navigateTo; } catch(_){ }
+        }
+    }
+
+    // Helper: run closing bars animation (reverse of intro) and bring the center icon to front
+    function runClosingBars(navigateTo) {
+        try {
+            const pageRoot = document.body;
+            // Create left and right closing panels that slide in over the viewport
+            const closingLeft = document.createElement('div');
+            const closingRight = document.createElement('div');
+
+            closingLeft.className = 'movie-intro-left closing-panel';
+            closingRight.className = 'movie-intro-right closing-panel';
+
+            // Ensure the panels cover the same expanded area as the intro
+            [closingLeft, closingRight].forEach(el => {
+                el.style.top = '-6vh';
+                el.style.height = 'calc(100vh + 12vh)';
+                el.style.background = '#000';
+                el.style.zIndex = '9998';
+                el.style.pointerEvents = 'none';
+            });
+
+            // Prepare avatar/icon to be on top during the closing animation
+            const center = document.querySelector('.center-icon');
+            if (center) {
+                // raise z-index so it floats above closing panels
+                center.style.zIndex = '10001';
+                // add a class so we can animate or style it if needed
+                center.classList.add('closing-foreground');
+                // disable interactions during outro
+                try { center.style.pointerEvents = 'none'; } catch(e){}
+            }
+
+            // Append panels and animate them into view using the existing keyframes
+            if (pageRoot) {
+                pageRoot.appendChild(closingLeft);
+                pageRoot.appendChild(closingRight);
+
+                // Trigger the close animations by applying keyframes via inline styles
+                closingLeft.style.transform = 'translateX(calc(-100vw - var(--bar-overhang)))';
+                closingLeft.style.animation = 'closeLeft 2.5s ease-in-out forwards';
+                closingRight.style.transform = 'translateX(calc(100vw + var(--bar-overhang)))';
+                closingRight.style.animation = 'closeRight 2.5s ease-in-out forwards';
+            }
+
+            // Optionally fade audio quickly so the transition feels cinematic
+            try {
+                const anyAudio = document.querySelector('audio');
+                if (anyAudio) {
+                    const fadeOutDuration = 300;
+                    const interval = 30;
+                    const steps = Math.max(4, Math.floor(fadeOutDuration / interval));
+                    const startVol = anyAudio.volume || 0.5;
+                    let step = 0;
+                    const iv = setInterval(() => {
+                        step++;
+                        anyAudio.volume = Math.max(0, startVol * (1 - step / steps));
+                        if (step >= steps) { clearInterval(iv); try { anyAudio.pause(); } catch(e){} }
+                    }, interval);
+                }
+            } catch (e) { /* ignore audio fade errors */ }
+
+            // After the closing animation finishes, navigate
+            const durationMs = 2500; // match closeLeft/closeRight keyframe durations
+            setTimeout(() => {
+                try {
+                    // restore center z-index to default after navigation triggered (page will unload)
+                    if (center) {
+                        center.style.zIndex = '';
+                        center.classList.remove('closing-foreground');
+                        try { center.style.pointerEvents = ''; } catch(e){}
+                    }
+                } catch (e) {}
+                try { window.location.href = navigateTo; } catch(e) { console.debug('navigate failed', e); }
+            }, durationMs + 80);
         } catch (e) {
             try { window.location.href = navigateTo; } catch(_){ }
         }

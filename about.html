@@ -7,16 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Ballet&display=swap" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* Page-level root styles */
         body {
-            width: 100%;
-            min-height: 100vh;
-               background-color: #000;
+            background-color: #000;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -67,8 +60,9 @@
         object-position: center center;
         z-index: -1;
         transform-origin: center center;
-        /* Keep the video at its intended scale; parallax will translate only */
-        transform: translate(0,0);
+          /* Slightly zoom the background for a tighter composition. Parallax will
+              apply translate while preserving this scale. */
+          transform: translate(0,0) scale(1.06);
         filter: blur(0px) grayscale(0%);
         transition: opacity 520ms ease-in-out, filter 0.2s ease-in-out, transform 0.2s ease;
         opacity: 1;
@@ -113,72 +107,7 @@
                 filter: none;
             }
 
-        @keyframes blurToClean {
-            /* preserve grayscale during the blur->clean animation so elements
-               that rely on .page-root's grayscale don't briefly flash to color */
-            0% {
-                filter: blur(15px) grayscale(0%);
-                opacity: 1;
-            }
-            100% {
-                filter: blur(0px) grayscale(0%);
-                opacity: 1;
-            }
-        }
-
-        @keyframes closingBlur {
-            /* keep grayscale during the closing blur so the visual state is consistent */
-            0% {
-                filter: blur(0px) grayscale(0%);
-            }
-            100% {
-                filter: blur(15px) grayscale(0%);
-            }
-        }
-
-        @keyframes openLeft {
-            0% {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            100% {
-                transform: translateX(calc(-100vw - var(--bar-total)));
-                opacity: 1;
-            }
-        }
-
-        @keyframes openRight {
-            0% {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            100% {
-                transform: translateX(calc(100vw + var(--bar-total)));
-                opacity: 1;
-            }
-        }
-
-        @keyframes closeLeft {
-            0% {
-                transform: translateX(calc(-100vw - var(--bar-total)));
-                opacity: 1;
-            }
-            100% {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes closeRight {
-            0% {
-                transform: translateX(calc(100vw + var(--bar-total)));
-                opacity: 1;
-            }
-            100% {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
+        /* Intro transitions removed: open/close keyframes deleted so page appears instantly */
 
         .header {
             text-align: center;
@@ -202,64 +131,131 @@
             }
         }
 
-        /* Movie intro effect (match homepage geometry) */
+        /* Movie intro CSS (matched to homepage) */
+        :root { --bar-slide-duration: 1.2s; --bar-slide-ease: ease-in-out; }
+
         .movie-intro-overlay {
             position: fixed;
             top: -6vh;
-            left: calc(-1 * var(--bar-overhang));
-            width: calc(100% + (var(--bar-overhang) * 2));
+            left: 0;
+            width: 100%;
             height: calc(100vh + 12vh);
             background-color: #000;
             z-index: 9999;
-            animation: movieIntroOpen 2.5s ease-in-out forwards;
             pointer-events: none;
         }
 
-        .movie-intro-left {
+        .movie-intro-left, .movie-intro-right {
             position: fixed;
             top: -6vh;
-            left: calc(-1 * var(--bar-overhang));
-            width: calc(50% + var(--bar-overhang));
             height: calc(100vh + 12vh);
-            background-color: #000;
-            z-index: 9998;
-            animation: openLeft 2.5s ease-in-out forwards;
+            background: #000;
+            z-index: 900;
             pointer-events: none;
             transition: transform var(--bar-slide-duration) var(--bar-slide-ease);
-            will-change: transform;
         }
 
-        .movie-intro-left.active {
-            transform: translateX(-100%);
-            animation: none;
+        .movie-intro-left { left: calc(-1 * var(--bar-overhang)); width: calc(50% + var(--bar-overhang)); }
+        .movie-intro-right{ right: calc(-1 * var(--bar-overhang)); width: calc(50% + var(--bar-overhang)); }
+        .movie-intro-left.open { animation: openLeft 2.5s ease-in-out forwards; }
+        .movie-intro-right.open { animation: openRight 2.5s ease-in-out forwards; }
+
+        @keyframes openLeft {
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(calc(-100vw - var(--bar-overhang))); opacity: 1; }
         }
 
-        .movie-intro-left.closing {
-            animation: closeLeft 2.5s ease-in-out forwards;
+        @keyframes openRight {
+            0% { transform: translateX(0); opacity: 1; }
+            100% { transform: translateX(calc(100vw + var(--bar-overhang))); opacity: 1; }
         }
 
-        .movie-intro-left.slide-out {
-            transform: translateX(calc(-100vw - var(--bar-total))) !important;
+        @keyframes closeLeft {
+            0% { transform: translateX(calc(-100vw - var(--bar-overhang))); }
+            100% { transform: translateX(0); }
         }
 
-        .movie-intro-right {
+        @keyframes closeRight {
+            0% { transform: translateX(calc(100vw + var(--bar-overhang))); }
+            100% { transform: translateX(0); }
+        }
+
+        /* Foreground class applied to the center icon to keep it above panels.
+           Ensure the post-intro promoted state (`icon-top`) uses the same visual
+           transform so the icon looks identical before and after the panels open. */
+        .center-icon.closing-foreground,
+        .center-icon.icon-top {
+            /* Match homepage stacking so the promoted icon sits above overlays */
+            z-index: 11000 !important;
+            /* Do not scale the icon; keep size identical to homepage */
+            transform: translateZ(0);
+            transition: transform 360ms ease-in-out;
+        }
+
+        /* Ensure the promoted center container doesn't block interactions
+           with the content block. The container can stay visually on top
+           (for clipping/stacking) but pointer-events should pass through
+           except for the avatar image itself which must remain clickable. */
+        .center-icon.icon-top {
+            pointer-events: none;
+        }
+        .center-icon.icon-top img {
+            /* Re-enable pointer events for the actual avatar image */
+            pointer-events: auto;
+        }
+
+        /* During the cinematic intro, the JS applies a 'no-interact' class
+           to the center icon to make it completely non-interactive. This
+           prevents accidental clicks while the bars are closed. When the
+           panels finish opening the JS removes this class and the avatar
+           becomes interactive again. */
+        .center-icon.no-interact {
+            pointer-events: none !important;
+        }
+        .center-icon.no-interact img {
+            pointer-events: none !important;
+            /* remove pointer cursor while non-interactive */
+            cursor: default !important;
+        }
+
+        /* Chapter label (pixelated) shown before panels open — use the same
+           reveal/fade timings as the homepage intro-name for consistency. */
+        .chapter-label {
             position: fixed;
-            top: -6vh;
-            right: calc(-1 * var(--bar-overhang));
-            width: calc(50% + var(--bar-overhang));
-            height: calc(100vh + 12vh);
-            background-color: #000;
-            z-index: 9998;
-            animation: openRight 2.5s ease-in-out forwards;
+            /* place at the same position as the dropdown/menu button */
+            left: 20px;
+            top: 8px;
+            transform: none;
+            text-align: left;
+            margin-left: 0;
+            /* Add inner left padding so the typed text has a margin from the element edge */
+            padding-left: 8px;
+            font-family: 'Press Start 2P', cursive;
+            /* Slightly reduced responsive sizing per request */
+            font-size: clamp(8px, 1.4vw, 10px);
+            /* Slightly larger line spacing for multi-line typed text */
+            line-height: 1.6;
+            color: #ffffff;
+            text-transform: lowercase;
+            letter-spacing: 1px;
+            z-index: 10020;
+            opacity: 0.18; /* start faint but visible like intro name */
+            filter: blur(4px) brightness(0.6);
+            /* Allow transitions so the chapter label can animate when fading out */
+            transition: filter 1800ms ease, opacity 1800ms ease, transform 1800ms ease;
+            -webkit-font-smoothing: none;
+            will-change: opacity, filter;
             pointer-events: none;
-            transition: transform var(--bar-slide-duration) var(--bar-slide-ease);
-            will-change: transform;
+            text-shadow: 0 8px 22px rgba(231,143,165,0.28), 0 0 10px rgba(231,143,165,0.18);
+            white-space: pre-wrap;
         }
 
-        .movie-intro-right.active {
-            transform: translateX(100%);
-            animation: none;
-        }
+    /* Keep the centering transform when revealing so it doesn't shift horizontally */
+    .chapter-label.reveal { opacity: 1; filter: none; transform: none; }
+
+        /* Fade/blur stage when panels begin to open */
+    /* When fading, apply blur/opacity/translate so the printed text blurs out */
+    .chapter-label.fade { opacity: 0; filter: blur(6px) brightness(0.6); transform: translateY(-8px) scale(0.995); transition: filter 1800ms ease, opacity 1800ms ease, transform 1800ms ease; }
 
         /* Add persistent vertical frame bars like the homepage */
         .container::before,
@@ -272,6 +268,7 @@
             height: calc(100vh + 12vh);
             background-color: transparent; /* no black bars */
             z-index: 100; /* placeholder stacking */
+            pointer-events: none; /* allow clicks to pass through to dropdown/menu */
             transition: width 0.6s ease-in-out;
             pointer-events: none;
         }
@@ -296,6 +293,10 @@
             animation: closeRight 2.5s ease-in-out forwards;
         }
 
+        .movie-intro-right.open {
+            animation: openRight 2.5s ease-in-out forwards;
+        }
+
         .movie-intro-right.slide-out {
             transform: translateX(calc(100vw + var(--bar-total))) !important;
         }
@@ -305,7 +306,7 @@
            content block has the .active class. */
         .about-me-ballet {
             position: absolute;
-            top: calc(120px - 40px); /* slightly above the content block top (moved up) */
+            top: calc(120px - 60px); /* moved slightly higher above the content block */
             left: 200px; /* moved a bit left from previous position */
             margin-right: 40px;
             font-family: 'Ballet', 'Brush Script MT', cursive;
@@ -337,6 +338,75 @@
                 transform: translateX(calc(6vw + 25vw)) translateY(-1.2vh);
         }
 
+            /* Intro name style (Ballet) for About/Me reveal — mirror homepage intro-name */
+            .about-intro-name {
+                /* container holds the spans; spans are positioned independently */
+                position: relative;
+                pointer-events: none;
+            }
+            .about-intro-name .about-intro-first,
+            .about-intro-name .about-intro-last {
+                position: fixed;
+                left: 50%;
+                top: 52%;
+                transform: translate(-50%, -50%);
+                display: inline-block;
+                opacity: 0.08;
+                filter: blur(4px) brightness(0.6);
+                transition: opacity 1200ms ease, filter 1200ms ease, transform 1200ms ease;
+                -webkit-font-smoothing: antialiased;
+                /* Ballet font and sizing to match homepage 'Nam Tran' */
+                font-family: 'Ballet', 'Brush Script MT', cursive;
+                color: white;
+                font-size: clamp(28px, 8vw, 120px);
+                letter-spacing: 1px;
+                text-shadow: 0 8px 22px rgba(231,143,165,0.28), 0 0 10px rgba(231,143,165,0.18);
+            }
+            /* Place 'About' behind the icon (above bars but below icon) */
+    /* Position the two words so the avatar sits between them. Keep them on the same vertical level and
+       maintain consistent horizontal spacing (About at 40%, Me at 60%). Adjust these if you want
+       the icon to be slightly off-center. */
+            .about-intro-name .about-intro-first { z-index: 10020; left: 35%; top: 40%; }
+            /* Place 'Me' in front of the icon and lower it to 60% for vertical spacing */
+            .about-intro-name .about-intro-last { z-index: 11020; left: 60%; top: 60%; }
+
+            /* Keep the same centering transform when revealing so the words don't shift position */
+            .about-intro-name.reveal-first .about-intro-first { opacity: 1; filter: none; transform: translate(-50%, -50%); }
+            .about-intro-name.reveal-last .about-intro-last { opacity: 1; filter: none; transform: translate(-50%, -50%); }
+            /* Fade/blur stage when panels begin to open — keep centering translate */
+            .about-intro-name.fade {
+                opacity: 0 !important;
+                filter: blur(6px) brightness(0.6) !important;
+                transform: translate(-50%, -50%) translateY(-8px) scale(0.995) !important;
+                transition: filter 1800ms ease, opacity 1800ms ease, transform 1800ms ease;
+            }
+            /* The spans are position:fixed; apply fade/blur directly to them so the effect is visible */
+            .about-intro-name.fade .about-intro-first,
+            .about-intro-name.fade .about-intro-last {
+                opacity: 0 !important;
+                filter: blur(10px) brightness(0.6) !important;
+                -webkit-filter: blur(10px) brightness(0.6) !important;
+                transform: translate(-50%, -50%) translateY(-8px) scale(0.995) !important;
+                transition: filter 1800ms ease, opacity 1800ms ease, transform 1800ms ease;
+                will-change: opacity, filter, transform;
+            }
+            /* Mirror homepage behaviour: when the movie overlay gets .intro-fade, blur/fade the chapter label and About/Me */
+            #movieIntroOverlay.intro-fade ~ #chapterLabel,
+            #movieIntroOverlay.intro-fade ~ .about-intro-name,
+            #movieIntroOverlay.intro-fade ~ .about-intro-name .about-intro-first,
+            #movieIntroOverlay.intro-fade ~ .about-intro-name .about-intro-last {
+                filter: blur(6px) brightness(0.6);
+                -webkit-filter: blur(6px) brightness(0.6);
+                opacity: 0;
+                transform: translateY(-8px) scale(0.995);
+                transition: filter 1800ms ease, opacity 1800ms ease, transform 1800ms ease;
+            }
+            /* text-shadow fallback to emulate blur for browsers that ignore filter on fixed elements */
+            .about-intro-name.fade .about-intro-first,
+            .about-intro-name.fade .about-intro-last {
+                text-shadow: 0 0 18px rgba(0,0,0,0.6), 0 0 12px rgba(231,143,165,0.18) !important;
+            }
+
         @keyframes movieIntroOpen {
             0% {
                 opacity: 1;
@@ -352,8 +422,14 @@
             position: fixed;
             top: 3px;
             left: 20px;
-            z-index: 100;
+            /* place the dropdown above most UI but below the cinematic closing panels */
+            z-index: 11000;
             animation: float 3s ease-in-out infinite;
+            /* hidden by default — will fade/slide into view when .visible is added */
+            opacity: 0;
+            transform: translateY(-12px);
+            transition: opacity 900ms cubic-bezier(.2,.8,.2,1), transform 900ms cubic-bezier(.2,.8,.2,1);
+            pointer-events: none;
         }
 
         /* Audio control (copied from index.html) */
@@ -375,10 +451,24 @@
             transition: background-color 0.3s ease;
             filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
             animation: float 3s ease-in-out infinite;
-            display: block; /* show button by default */
+            display: none; /* hidden by default; shown when .dropdown-menu.visible */
         }
 
-        /* Show the button after avatar click */
+        /* Ensure the dropdown content is interactive when opened; the menu/button
+           interactivity is handled by the .visible class so we can animate the fade. */
+        .dropdown-content {
+            pointer-events: auto;
+            /* ensure dropdown content is above normal UI but below closing panels */
+            z-index: 11010;
+        }
+
+        /* Show the button after intro finishes or avatar click — fade in the whole menu */
+        .dropdown-menu.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto; /* now interactive */
+        }
+
         .dropdown-menu.visible .dropdown-button {
             display: block;
         }
@@ -391,12 +481,14 @@
             display: none;
             position: absolute;
             background-image: url('images/dropdowncloud.png');
-            background-size: 153%;
+            /* adjust cloud artwork scale */
+            background-size: 120%;
             background-position: center;
             background-repeat: no-repeat;
             min-width: 150px;
-            padding: 45px 25px 50px 25px;
-            z-index: 1;
+            padding: 40px 20px 44px 20px;
+            /* ensure menu content is above other UI and interactive */
+            z-index: 11111;
             border-radius: 5px;
             top: 80px;
             left: 50%;
@@ -435,7 +527,8 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding-top: 4vh;
+            /* nudge avatar slightly down from previous position */
+            padding-top: 5.4vh;
             width: 100%;
             height: 100%;
             position: relative; /* ensure absolutely positioned Ballet label is relative to this container */
@@ -463,7 +556,13 @@
             cursor: url('images/homeimages/cursor.png') 42 42, pointer;
             animation: aboutBlink 2.8s infinite, float 3s ease-in-out infinite;
             animation-delay: 0s, 0s;
-            z-index: 20; /* align with homepage avatar stacking */
+            /* Match homepage avatar size and stacking */
+            max-width: 75vw;
+            max-height: 75vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            z-index: 50;
             position: relative;
             filter: grayscale(100%);
             transition: filter 0.8s ease-in-out, opacity 0.2s ease-in-out;
@@ -476,7 +575,7 @@
             width: auto;
             height: auto;
             object-fit: contain;
-            z-index: 20; /* align with homepage avatar stacking */
+            z-index: 50;
             cursor: url('images/homeimages/cursor.png') 42 42, pointer;
             animation: aboutClosedBlink 2.8s infinite, float 3s ease-in-out infinite;
             animation-delay: 0s, 0s;
@@ -530,20 +629,23 @@
             position: relative;
             z-index: 100;
             transition: transform 0.8s ease-in-out;
+            /* nudge avatars slightly upward so they're visually centered on the About page */
+            top: -2vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
         .avatar-container.shifted {
-            /* move the avatar slightly further right when expanded (small nudge)
-               Keeping the spacing between avatar and content block consistent. */
-            transform: translateX(28vw);
+            /* move the avatar further right when expanded (bigger nudge)
+               Adjust left by 5vw so the avatar lines up with the content block's new position. */
+            transform: translateX(calc(33vw - 5vw));
         }
 
         .content-block {
             position: fixed;
-            left: 0;
+            /* shift the block slightly left so layout visually aligns with avatar */
+            left: -5vw;
             top: 120px; /* moved down slightly */
             width: 65vw;
             /* make content block shorter so it doesn't stretch full page height */
@@ -553,6 +655,13 @@
                     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='matrix' values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.36'/></filter><rect width='100%' height='100%' fill='black' filter='url(%23n)'/></svg>");
                     background-repeat: repeat;
                     background-size: 120px 120px;
+        /* While the intro panels are closed, bring the icon to the front and slightly scale up */
+        .center-icon.closing-foreground {
+            z-index: 11000 !important;
+            /* Keep the same size as homepage — do not scale up */
+            transform: translateZ(0);
+            transition: transform 360ms ease-in-out, z-index 0ms;
+        }
                     background-position: 0 0;
                     background-color: rgba(0,0,0,0.72);
                     background-blend-mode: multiply;
@@ -809,37 +918,8 @@
     </video>
 
     <script>
-    // If we were navigated from the homepage, run a coordinated fade-in of the background videos
-    (function coordinatedEntry() {
-        try {
-            const params = new URLSearchParams(window.location.search || '');
-            if (params.get('from') !== 'home') return; // nothing to do
-
-            const fg = document.querySelector('.background-video');
-            if (!fg) return;
-
-            // Start with video invisible and then fade it in. Do not change avatar visibility.
-            fg.style.opacity = '0';
-
-            // Ensure video is ready before fading in so there's no flash of black
-            const whenReady = new Promise(resolve => { if (fg.readyState >= 2) resolve(); else fg.addEventListener('loadeddata', resolve, { once: true }); });
-
-            whenReady.then(() => {
-                // Fade in foreground video and then hide the crossfade overlay
-                fg.style.transition = 'opacity 520ms ease-in-out';
-                fg.style.opacity = '1';
-                // After foreground fades in, hide the crossfade overlay left by the previous page
-                setTimeout(() => {
-                    try { const overlay = document.getElementById('crossfade-overlay'); if (overlay) overlay.style.opacity = '0'; } catch(e) {}
-                    // Remove the query param from history so reloading doesn't retrigger
-                    try { const url = new URL(window.location.href); url.searchParams.delete('from'); window.history.replaceState({}, '', url.toString()); } catch(e) {}
-                }, 560);
-            }).catch(() => {
-                fg.style.opacity = '1';
-                try { const overlay = document.getElementById('crossfade-overlay'); if (overlay) overlay.style.opacity = '0'; } catch(e) {}
-            });
-        } catch (e) { console.debug('coordinatedEntry error', e); }
-    })();
+    // Fade intro removed to ensure the movie-intro panels control the page reveal.
+    // The opening bars are handled by the controlledIntro logic later in the file.
     </script>
 
     <!-- Background Audio (about page) -->
@@ -853,10 +933,14 @@
     <div class="page-root">
         <!-- subtle full-screen black tint overlay (10%) -->
         <div class="overlay" aria-hidden="true"></div>
-    <!-- Movie Intro Overlay -->
-    <!-- movie intro panels removed per user request -->
+    <!-- Movie Intro Overlay and panels -->
+    <div id="movieIntroOverlay" class="movie-intro-overlay" aria-hidden="true"></div>
+    <div id="movieIntroLeft" class="movie-intro-left" aria-hidden="true"></div>
+    <div id="movieIntroRight" class="movie-intro-right" aria-hidden="true"></div>
+    <!-- Chapter label shown before panels open -->
+    <div id="chapterLabel" class="chapter-label"></div>
 
-    <div class="dropdown-menu visible">
+    <div class="dropdown-menu">
         <button class="dropdown-button">Menu</button>
         <div class="dropdown-content">
             <a href="index.html">Home</a>
@@ -930,6 +1014,9 @@
     const dropdownButton = document.querySelector('.dropdown-button');
     const dropdownLinks = document.querySelectorAll('.dropdown-content a');
 
+    // Diagnostic: confirm the script executed
+    try { console.log('[about] script loaded'); } catch(e) {}
+
     // Get current page filename
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
 
@@ -940,6 +1027,255 @@
             link.classList.add('active');
         }
     });
+    // Diagnostic: log how many dropdown links we found so it's easy to confirm the script ran
+    try { console.log('[about] dropdownLinks count ->', dropdownLinks && dropdownLinks.length); } catch(e) {}
+
+    // Controlled intro: mirror homepage logic — no DOM clone, use classes and animationend
+    (function controlledIntro() {
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            if (params.get('skipIntro') === '1') {
+                const cb = document.getElementById('contentBlock');
+                if (cb) cb.classList.add('active');
+                try { revealContentSectionsNow(); } catch(e){}
+                // If skipping the intro, make the menu visible immediately
+                try { if (dropdownMenu) dropdownMenu.classList.add('visible'); } catch(e){}
+                return;
+            }
+
+            const left = document.getElementById('movieIntroLeft');
+            const right = document.getElementById('movieIntroRight');
+            const overlay = document.getElementById('movieIntroOverlay');
+            const center = document.querySelector('.center-icon');
+            const contentBlock = document.getElementById('contentBlock');
+
+            if (!left || !right || !overlay || !center || !contentBlock) {
+                // If required nodes missing, skip the cinematic panels but still
+                // reveal the dropdown menu so navigation is available.
+                console.debug('[about] intro nodes missing — skipping cinematic intro');
+                try { if (dropdownMenu) dropdownMenu.classList.add('visible'); } catch (e) {}
+                return;
+            }
+
+            // Make center non-interactive and promote it above the panels
+            try { center.classList.add('no-interact'); } catch(e){}
+            try { center.classList.add('closing-foreground'); } catch(e){}
+
+            // Track whether the panels have started opening so injected elements
+            // added later can respond and fade immediately.
+            let panelsOpeningStarted = false;
+
+            // Show the chapter label briefly while bars are closed — type it
+            try {
+                const chapter = document.getElementById('chapterLabel');
+                if (chapter) {
+                    // small typing helper modeled after homepage typing
+                    function typeStringInto(el, str, speed = 70, delay = 0, cb) {
+                        let i = 0;
+                        const t = setTimeout(function step() {
+                            if (i < str.length) {
+                                el.textContent += str[i++];
+                                setTimeout(step, speed);
+                            } else if (typeof cb === 'function') cb();
+                        }, delay);
+                    }
+
+                    // Delay slightly before typing so it doesn't flash instantly
+                    setTimeout(() => {
+                        try {
+                            // prepare the element and use the CSS reveal class for visual consistency
+                            chapter.textContent = '';
+                            chapter.classList.add('reveal');
+                                try {
+                                // Ensure the typed lines appear instantly without transition
+                                chapter.style.transition = 'none';
+                                chapter.style.opacity = '1';
+                                chapter.style.filter = 'none';
+                                // Do not force centering here — leave positioning to CSS (left/top)
+                                chapter.style.transform = 'none';
+                            } catch (ie) { /* non-fatal */ }
+                            // Type the phrase like print("chapter 1") but show only the inner text
+                            // Type a three-line sequence with line breaks
+                            typeStringInto(chapter, 'print("closing the previous chapter...")\n', 60, 0, () => {
+                                setTimeout(() => {
+                                    try {
+                                        // type the time.sleep line on the next line
+                                        typeStringInto(chapter, 'time.sleep(1)\n', 60, 0, () => {
+                                            setTimeout(() => {
+                                                try {
+                                                    // final line
+                                                    typeStringInto(chapter, 'print("opening chapter one")', 60, 0, () => {
+                                                        try {
+                                                            // After typing completes, insert the Ballet-style About/Me name
+                                                            const existing = document.querySelector('.about-intro-name');
+                                                            if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+                                                            const nameEl = document.createElement('div');
+                                                            nameEl.className = 'about-intro-name';
+                                                            nameEl.innerHTML = '<span class="about-intro-first">About</span> <span class="about-intro-last">Me</span>';
+                                                            // Place the name element in the page-root so z-indexing is predictable
+                                                            const pageRoot = document.querySelector('.page-root') || document.body;
+                                                            pageRoot.appendChild(nameEl);
+
+                                                            // Mirror homepage timings: reveal-first at ~200ms, reveal-last at ~600ms
+                                                            setTimeout(() => { nameEl.classList.add('reveal-first'); }, 200);
+                                                            setTimeout(() => { nameEl.classList.add('reveal-last'); }, 600);
+                                                            // If panels already started opening, fade the name immediately
+                                                            try {
+                                                                if (typeof panelsOpeningStarted !== 'undefined' && panelsOpeningStarted) {
+                                                                    nameEl.classList.remove('reveal-first');
+                                                                    nameEl.classList.remove('reveal-last');
+                                                                    nameEl.classList.add('fade');
+                                                                    nameEl.style.transition = 'filter 1800ms ease, opacity 1800ms ease, transform 1800ms ease';
+                                                                    nameEl.style.opacity = '0';
+                                                                    nameEl.style.filter = 'blur(6px) brightness(0.6)';
+                                                                    nameEl.style.transform = 'translate(-50%, -50%) translateY(-8px) scale(0.995)';
+                                                                }
+                                                            } catch (ie) { /* non-fatal */ }
+                                                        } catch (e) { console.debug('inject About/Me name failed', e); }
+                                                    });
+                                                } catch (e) { console.debug('final typing failed', e); }
+                                            }, 200);
+                                        });
+                                    } catch (e) { console.debug('time.sleep typing failed', e); }
+                                }, 200);
+                            });
+                        } catch (innerErr) { console.debug('chapter typing inner error', innerErr); }
+                    }, 200);
+                }
+            } catch(e) { console.debug('chapter label typing error', e); }
+
+            // Wait 3 seconds with the bars closed, then fade the overlay and open the panels.
+            try {
+                overlay.style.transition = 'opacity 420ms ease-in-out';
+            } catch (e) { console.debug('[about] overlay transition setup error', e); }
+
+            // Keep panels closed for 8000ms before starting the reveal sequence
+            setTimeout(() => {
+                try {
+                    overlay.style.opacity = '0';
+                    console.debug('[about] overlay fade started after 5000ms delay');
+                } catch (e) { console.debug('[about] overlay fade error after delay', e); }
+
+                // Small delay so the overlay fade is noticeable; then trigger the open animation.
+                // We purposely DO NOT fade elements here; they will be faded exactly when
+                // the panels begin opening so the chapter label and About/Me animate together.
+
+                setTimeout(() => {
+                    try {
+                        console.debug('[about] starting panel open (apply fade to chapter & name, then open panels)');
+                        try { overlay.classList.add('intro-fade'); } catch(e) {}
+                    // Apply fade/blur to chapter label and About/Me name at the same moment
+                    try {
+                        const fadeTransition = 'filter 1800ms ease, opacity 1800ms ease, transform 1800ms ease';
+                        const chapter = document.getElementById('chapterLabel');
+                        const aboutName = document.querySelector('.about-intro-name');
+                        if (chapter) {
+                            chapter.classList.remove('reveal');
+                            chapter.classList.add('fade');
+                            chapter.style.transition = fadeTransition;
+                        }
+                        if (aboutName) {
+                            aboutName.classList.remove('reveal-first');
+                            aboutName.classList.remove('reveal-last');
+                            aboutName.classList.add('fade');
+                            aboutName.style.transition = fadeTransition;
+                        }
+                        // Force a single reflow so both elements start their transitions together
+                        void document.body.offsetWidth;
+                        if (chapter) {
+                            chapter.style.opacity = '0';
+                            chapter.style.filter = 'blur(6px) brightness(0.6)';
+                            chapter.style.transform = 'translateY(-8px) scale(0.995)';
+                        }
+                        if (aboutName) {
+                            // Minimal, consistent behavior: use CSS-driven fade like the homepage
+                            try {
+                                aboutName.classList.remove('reveal-first');
+                                aboutName.classList.remove('reveal-last');
+                                aboutName.classList.add('fade');
+                                aboutName.style.transition = fadeTransition;
+                                // also set final state on child spans so the visual matches the initial reveal
+                                try {
+                                    const f = aboutName.querySelector('.about-intro-first');
+                                    const l = aboutName.querySelector('.about-intro-last');
+                                    if (f) {
+                                        f.style.setProperty('opacity', '0', 'important');
+                                        f.style.setProperty('filter', 'blur(10px) brightness(0.6)', 'important');
+                                        f.style.setProperty('-webkit-filter', 'blur(10px) brightness(0.6)', 'important');
+                                        f.style.setProperty('transform', 'translate(-50%, -50%) translateY(-8px) scale(0.995)', 'important');
+                                    }
+                                    if (l) {
+                                        l.style.setProperty('opacity', '0', 'important');
+                                        l.style.setProperty('filter', 'blur(10px) brightness(0.6)', 'important');
+                                        l.style.setProperty('-webkit-filter', 'blur(10px) brightness(0.6)', 'important');
+                                        l.style.setProperty('transform', 'translate(-50%, -50%) translateY(-8px) scale(0.995)', 'important');
+                                    }
+                                } catch (ie) { /* non-fatal */ }
+                            } catch (ie) { /* non-fatal */ }
+                        }
+                    } catch (ie) { /* non-fatal */ }
+
+                    // Mark panels opening started so any injected name after this point fades immediately
+                    try { panelsOpeningStarted = true; } catch(e){}
+
+                    left.classList.add('open');
+                    right.classList.add('open');
+                    // (fade already applied above) 
+                    // Reveal the dropdown earlier (midway through the open animation)
+                    // so the menu doesn't feel delayed. This adds the visible class
+                    // ~1.2s after the open starts. panelDone will still add visible as
+                    // a safety when animations finish.
+                    try {
+                        setTimeout(() => { if (dropdownMenu) dropdownMenu.classList.add('visible'); }, 1200);
+                    } catch(e) { console.debug('dropdown early reveal failed', e); }
+                    
+                    // Also make the center icon interactive partway through the open
+                    // animation so the user can click it as soon as the bars feel
+                    // 'open' (match the menu early reveal timing).
+                    try {
+                        setTimeout(() => { if (center) center.classList.remove('no-interact'); }, 1200);
+                    } catch (e) { console.debug('early re-enable of center icon failed', e); }
+                    // fallback inline animation to ensure animation starts across browsers
+                    try { left.style.animation = 'openLeft 2.5s ease-in-out forwards'; } catch(e) {}
+                    try { right.style.animation = 'openRight 2.5s ease-in-out forwards'; } catch(e) {}
+
+                    let panelsHandled = false;
+                    const panelDone = () => {
+                        if (panelsHandled) return; panelsHandled = true;
+                        console.debug('[about] panelDone fired — cleaning up');
+                        try { if (left.parentNode) left.parentNode.removeChild(left); } catch(e){}
+                        try { if (right.parentNode) right.parentNode.removeChild(right); } catch(e){}
+                        try { if (overlay.parentNode) overlay.parentNode.removeChild(overlay); } catch(e){}
+                        try { center.classList.remove('no-interact'); } catch(e){}
+                        try { center.classList.remove('closing-foreground'); } catch(e){}
+                        // Rely on class-based styling for visual state; do not force inline transforms.
+                        // Keep the icon visually promoted so it's not clipped by overlays
+                        try { center.classList.add('icon-top'); } catch(e){}
+                        // Reveal the dropdown menu after the panels finish opening
+                        try { if (dropdownMenu) dropdownMenu.classList.add('visible'); } catch(e){}
+                        // Do NOT reveal content-block here; it should appear on avatar click.
+                        console.debug('[about] panels finished — content remains hidden until avatar click');
+                        // Remove chapter label from DOM
+                        try { const chapter = document.getElementById('chapterLabel'); if (chapter && chapter.parentNode) chapter.parentNode.removeChild(chapter); } catch(e) {}
+                        // Remove injected About/Me intro name if present
+                        try { const aboutName = document.querySelector('.about-intro-name'); if (aboutName && aboutName.parentNode) aboutName.parentNode.removeChild(aboutName); } catch(e) {}
+                    };
+
+                    // Listen for animationend on either panel as primary signal
+                    if (left.addEventListener) left.addEventListener('animationend', panelDone, { once: true });
+                    if (right.addEventListener) right.addEventListener('animationend', panelDone, { once: true });
+
+                    // Fallback timeout in case animationend doesn't fire
+                    setTimeout(panelDone, 2600);
+                } catch (e) {
+                    console.debug('panel open trigger error', e);
+                    try { contentBlock.classList.add('active'); } catch(e){}
+                    try { revealContentSectionsNow(); } catch(e){}
+                }
+            }, 90); // ~1 frame + small buffer
+            }, 8000);
+        } catch (e) { console.debug('controlledIntro error', e); }
+    })();
 
     // When the visible button is clicked, toggle the actual dropdown content
     dropdownButton.addEventListener('click', function(e) {
@@ -950,12 +1286,245 @@
     // Add navigation to dropdown links
     // Closing outro removed: navigate immediately when requested.
     function runClosingOutro(navigateTo) {
+        console.log('[about] runClosingOutro requested ->', navigateTo);
         if (navigateTo) {
+            let isHomeTarget = false;
             try {
-                if (navigateTo.indexOf('index.html') !== -1 || navigateTo === '' || navigateTo === '/') {
-                    sessionStorage.removeItem('introShown');
-                }
+                isHomeTarget = (navigateTo.indexOf('index.html') !== -1 || navigateTo === '' || navigateTo === '/');
+                if (isHomeTarget) sessionStorage.removeItem('introShown');
             } catch (e) { /* ignore */ }
+            // Play closing panels animation that covers the entire viewport (including the icon),
+            // then navigate when the animation finishes. If panels were removed earlier we
+            // create temporary ones so the closing animation is visible.
+            try {
+                let left = document.getElementById('movieIntroLeft');
+                let right = document.getElementById('movieIntroRight');
+                let overlay = document.getElementById('movieIntroOverlay');
+                const center = document.querySelector('.center-icon');
+
+                // Helper to create panel nodes if missing
+                const ensurePanels = () => {
+                    if (!overlay) {
+                        overlay = document.createElement('div');
+                        overlay.id = 'movieIntroOverlay';
+                        overlay.className = 'movie-intro-overlay';
+                        document.body.appendChild(overlay);
+                    }
+                    if (!left) {
+                        left = document.createElement('div');
+                        left.id = 'movieIntroLeft';
+                        left.className = 'movie-intro-left';
+                        document.body.appendChild(left);
+                    }
+                    if (!right) {
+                        right = document.createElement('div');
+                        right.id = 'movieIntroRight';
+                        right.className = 'movie-intro-right';
+                        document.body.appendChild(right);
+                    }
+                };
+
+                ensurePanels();
+
+                console.log('[about] panels ensured:', { left, right, overlay });
+
+                // Ensure panels sit above the icon while closing; put panels above the overlay
+                try { left.style.zIndex = 13050; } catch(e){}
+                try { right.style.zIndex = 13050; } catch(e){}
+                try { overlay.style.zIndex = 13040; } catch(e){}
+
+                // Keep the overlay transparent so the panels close over the actual page content
+                // (we don't want a full-screen black background behind the panels).
+                try { overlay.style.backgroundColor = 'transparent'; overlay.style.opacity = '0'; overlay.style.pointerEvents = 'none'; } catch(e){}
+
+                // Force the left/right panels to start off-screen so the close animation
+                // (which animates from offscreen -> 0) is visible even when panels were created now.
+                try { left.style.transform = 'translateX(calc(-100vw - var(--bar-overhang)))'; } catch(e){}
+                try { right.style.transform = 'translateX(calc(100vw + var(--bar-overhang)))'; } catch(e){}
+                // Reset the avatar/icon to the default (smiling/home) state so the bars
+                // close over the default icon instead of the expanded/about avatar.
+                let closingCenterClone = null;
+                let contentBlockEl = null;
+                let avatarImageEl = null;
+                try {
+                    avatarImageEl = document.getElementById('avatarImage');
+                    const avatarImageClosedEl = document.getElementById('avatarImageClosed');
+                    const avatarContainerEl = document.getElementById('avatarContainer');
+                    contentBlockEl = document.getElementById('contentBlock');
+                    const pageRootEl = document.querySelector('.page-root');
+                    const bgVideoEl = document.querySelector('.background-video');
+
+                    if (avatarImageEl) avatarImageEl.src = 'images/homeimages/fullbodyiconsmile-transparent.png';
+                    if (avatarImageClosedEl) avatarImageClosedEl.src = 'images/homeimages/fullbodyiconsmileclosed-transparent.png';
+                    if (avatarContainerEl) avatarContainerEl.classList.remove('shifted');
+                    if (contentBlockEl) contentBlockEl.classList.remove('active');
+                    // Force reflow then remove color-mode on next frame (mirrors collapse behavior)
+                    void document.body.offsetWidth;
+                    requestAnimationFrame(() => {
+                        try { if (pageRootEl) pageRootEl.classList.remove('color-mode'); } catch(e){}
+                        try { if (bgVideoEl) bgVideoEl.classList.remove('color'); } catch(e){}
+                        try { if (dropdownMenu) dropdownMenu.classList.remove('menu-open'); } catch(e){}
+                    });
+                    try { isExpanded = false; } catch(e){}
+                } catch(e) { console.log('Could not reset avatar before closing outro', e); }
+
+                // Start closing sequence only after avatar/content block has visually collapsed
+                const startCloseSequence = () => {
+                    if (center) {
+                        if (isHomeTarget) {
+                            try { center.classList.remove('icon-top'); } catch(e){}
+                            try { center.classList.add('closing-foreground'); } catch(e){}
+                            // ensure panels still sit above when targeting home
+                            try { left.style.zIndex = 13050; } catch(e){}
+                            try { right.style.zIndex = 13050; } catch(e){}
+                        } else {
+                            try { center.classList.remove('closing-foreground'); } catch(e){}
+                            try { center.classList.add('icon-top'); } catch(e){}
+                            try {
+                                const avatarImg = avatarImageEl;
+                                const rect = (avatarImg && avatarImg.getBoundingClientRect) ? avatarImg.getBoundingClientRect() : center.getBoundingClientRect();
+                                if (avatarImg) {
+                                    closingCenterClone = document.createElement('img');
+                                    closingCenterClone.id = 'closingCenterClone';
+                                    closingCenterClone.src = avatarImg.src || 'images/homeimages/fullbodyiconsmile-transparent.png';
+                                    const cs = closingCenterClone.style;
+                                    cs.position = 'fixed';
+                                    cs.left = rect.left + 'px';
+                                    cs.top = rect.top + 'px';
+                                    cs.width = Math.round(rect.width) + 'px';
+                                    cs.height = Math.round(rect.height) + 'px';
+                                    cs.objectFit = 'contain';
+                                    cs.margin = '0';
+                                    cs.boxSizing = 'border-box';
+                                    cs.pointerEvents = 'none';
+                                    cs.willChange = 'transform, opacity';
+                                    cs.background = 'transparent';
+                                    cs.transform = 'none';
+                                    cs.zIndex = '2147483647';
+                                    try {
+                                        const srcCS = window.getComputedStyle(avatarImg);
+                                        if (srcCS) {
+                                            cs.borderRadius = srcCS.borderRadius || '';
+                                            cs.filter = srcCS.filter || '';
+                                            cs.boxShadow = srcCS.boxShadow || '';
+                                        }
+                                    } catch (ee) { /* ignore */ }
+                                    // Hide the original center visually while keeping it in the DOM
+                                        center.style.visibility = 'hidden';
+                                        // Disable interactivity while outro runs
+                                        try { center.style.pointerEvents = 'none'; } catch(e){}
+                                        document.body.appendChild(closingCenterClone);
+                                    console.log('[about] created center img clone at', rect, 'src=', closingCenterClone.src);
+                                } else {
+                                    console.log('[about] avatarImage not found; cannot create image clone');
+                                }
+                            } catch(e) { console.log('Could not create center image clone', e); }
+                        }
+                    }
+
+                    // start close animations (use keyframe names present in CSS)
+                    console.log('[about] starting closeLeft/closeRight animations');
+                    // Ensure panels are solid black and sit above the page content
+                    try { left.style.background = '#000'; left.style.pointerEvents = 'none'; } catch(e){}
+                    try { right.style.background = '#000'; right.style.pointerEvents = 'none'; } catch(e){}
+                    try { left.style.zIndex = 13050; } catch(e){}
+                    try { right.style.zIndex = 13050; } catch(e){}
+                    try { left.style.animation = 'closeLeft 2.5s ease-in-out forwards'; } catch(e){}
+                    try { right.style.animation = 'closeRight 2.5s ease-in-out forwards'; } catch(e){}
+
+                    let handled = false;
+                    const onDone = (ev) => {
+                        if (handled) return; handled = true;
+                        console.log('[about] closing animation finished', ev && ev.type);
+                        // cleanup any temporary inline z-index or clone we added for the icon
+                        try { if (center && center.style) center.style.zIndex = ''; } catch(e){}
+                        try { if (closingCenterClone && closingCenterClone.parentNode) closingCenterClone.parentNode.removeChild(closingCenterClone); } catch(e){}
+                        try { if (center) { center.style.visibility = ''; center.style.pointerEvents = ''; } } catch(e){}
+                        try { window.location.href = navigateTo; } catch(e) { window.location = navigateTo; }
+                    };
+
+                    // Listen for animationend on either panel and then navigate
+                    try { left.addEventListener && left.addEventListener('animationend', onDone, { once: true }); } catch(e){}
+                    try { right.addEventListener && right.addEventListener('animationend', onDone, { once: true }); } catch(e){}
+
+                    // Fallback timeout in case animationend doesn't fire
+                    setTimeout(onDone, 2600);
+                };
+
+                // If the avatar was shifted/expanded, wait for the avatar container's
+                // transform transition to finish so the clone captures the collapsed size.
+                try {
+                    const avatarContainerEl = document.getElementById('avatarContainer');
+                    let waited = false;
+                    const safeStart = (ms) => setTimeout(() => { if (!waited) { waited = true; startCloseSequence(); } }, ms);
+
+                    if (avatarContainerEl && avatarContainerEl.addEventListener) {
+                        // Try to read computed transition duration for the transform property
+                        let durMs = 300; // default fallback
+                        try {
+                            const cs = window.getComputedStyle(avatarContainerEl);
+                            const td = cs.transitionDuration || cs.transition || '';
+                            const parts = (td || '').split(',').map(s => s.trim());
+                            // find first duration in seconds/ms and parse
+                            if (parts.length) {
+                                const first = parts[0];
+                                if (first.endsWith('ms')) durMs = parseFloat(first);
+                                else if (first.endsWith('s')) durMs = parseFloat(first) * 1000;
+                            }
+                        } catch (ee) { /* ignore */ }
+
+                        const onTransEnd = (ev) => {
+                            if (ev.propertyName === 'transform' || ev.propertyName === 'opacity') {
+                                if (!waited) { waited = true; startCloseSequence(); }
+                            }
+                        };
+                        avatarContainerEl.addEventListener('transitionend', onTransEnd, { once: true });
+                        // fallback: start after computed duration + small buffer
+                        safeStart(durMs + 60);
+                    } else if (contentBlockEl && contentBlockEl.addEventListener) {
+                        // as a secondary fallback, wait for contentBlock transition
+                        const waitFor = (ev) => {
+                            if (ev.propertyName === 'transform' || ev.propertyName === 'opacity') {
+                                if (!waited) { waited = true; startCloseSequence(); }
+                            }
+                        };
+                        contentBlockEl.addEventListener('transitionend', waitFor, { once: true });
+                        safeStart(320);
+                    } else {
+                        // no element to wait on — start immediately next frame
+                        setTimeout(startCloseSequence, 40);
+                    }
+                } catch(e) { console.log('Could not wait for content collapse, starting close immediately', e); startCloseSequence(); }
+
+                // start close animations (use keyframe names present in CSS)
+                console.log('[about] starting closeLeft/closeRight animations');
+                // Ensure panels are solid black and sit above the page content
+                try { left.style.background = '#000'; left.style.pointerEvents = 'none'; } catch(e){}
+                try { right.style.background = '#000'; right.style.pointerEvents = 'none'; } catch(e){}
+                try { left.style.zIndex = 13050; } catch(e){}
+                try { right.style.zIndex = 13050; } catch(e){}
+                try { left.style.animation = 'closeLeft 2.5s ease-in-out forwards'; } catch(e){}
+                try { right.style.animation = 'closeRight 2.5s ease-in-out forwards'; } catch(e){}
+
+                let handled = false;
+                const onDone = (ev) => {
+                    if (handled) return; handled = true;
+                    console.log('[about] closing animation finished', ev && ev.type);
+                    // cleanup any temporary inline z-index or clone we added for the icon
+                    try { if (center && center.style) center.style.zIndex = ''; } catch(e){}
+                    try { if (closingCenterClone && closingCenterClone.parentNode) closingCenterClone.parentNode.removeChild(closingCenterClone); } catch(e){}
+                    try { if (center) center.style.visibility = ''; } catch(e){}
+                    try { window.location.href = navigateTo; } catch(e) { window.location = navigateTo; }
+                };
+
+                // Listen for animationend on either panel and then navigate
+                try { left.addEventListener && left.addEventListener('animationend', onDone, { once: true }); } catch(e){}
+                try { right.addEventListener && right.addEventListener('animationend', onDone, { once: true }); } catch(e){}
+
+                // Fallback timeout in case animationend doesn't fire
+                setTimeout(onDone, 2600);
+                return;
+            } catch (e) { /* ignore and navigate */ }
             window.location.href = navigateTo;
         }
     }
@@ -964,7 +1533,9 @@
     dropdownLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
+            e.stopPropagation(); // avoid the document click handler racing and hiding UI
             const href = this.getAttribute('href');
+            try { console.log('[about] dropdown link clicked ->', href); } catch(e) {}
             runClosingOutro(href);
         });
     });
@@ -978,10 +1549,9 @@
             return;
         }
 
-        // Otherwise close the dropdown
-        dropdownMenu.classList.remove('menu-open');
-        // Also hide the button if menu is closed
-        dropdownMenu.classList.remove('visible');
+    // Otherwise close the dropdown content but keep the visible button shown
+    dropdownMenu.classList.remove('menu-open');
+    // NOTE: do not remove the 'visible' class here — keep the button visible
     });
 
     // Avatar interaction
@@ -993,18 +1563,21 @@
     const movieIntroRight = document.querySelector('.movie-intro-right');
     let isExpanded = false;
 
-    // Remove opening intro immediately: don't run the cinematic intro on load.
-    // Make the panels 'active' and remove them right away so the page appears
-    // in its normal (non-intro) state.
+    // By default we keep the cinematic intro panels so the controlledIntro can run.
+    // Only remove the panels immediately when the page is requested with ?skipIntro=1
     try {
-        if (movieIntroLeft) movieIntroLeft.classList.add('active');
-        if (movieIntroRight) movieIntroRight.classList.add('active');
-        const introLeft = document.querySelector('.movie-intro-left');
-        const introRight = document.querySelector('.movie-intro-right');
-        if (introLeft) introLeft.remove();
-        if (introRight) introRight.remove();
+        const params2 = new URLSearchParams(window.location.search || '');
+        const skipIntroNow = params2.get('skipIntro') === '1';
+        if (skipIntroNow) {
+            if (movieIntroLeft) movieIntroLeft.classList.add('active');
+            if (movieIntroRight) movieIntroRight.classList.add('active');
+            const introLeft = document.querySelector('.movie-intro-left');
+            const introRight = document.querySelector('.movie-intro-right');
+            if (introLeft) introLeft.remove();
+            if (introRight) introRight.remove();
+        }
     } catch (e) {
-        console.debug('Could not remove intro panels:', e);
+        console.debug('Could not conditionally remove intro panels:', e);
     }
 
     // Also disable the opening blur animation on the page root so there is no
@@ -1118,9 +1691,9 @@
                 // Also remove color-mode from container
                 const containerEl = document.querySelector('.container');
                 if (containerEl) containerEl.classList.remove('color-mode');
-                // Hide dropdown button and close menu when avatar collapses
+                // Close the open dropdown content when avatar collapses, but keep
+                // the dropdown button visible so the user can still open the menu.
                 dropdownMenu.classList.remove('menu-open');
-                dropdownMenu.classList.remove('visible');
                 console.log('PageRoot classes:', pageRoot ? pageRoot.className : '(none)');
             });
 
@@ -1152,8 +1725,8 @@
         const translateX = offsetX * maxOffset;
         const translateY = offsetY * maxOffset;
         
-        // Apply transform to background video (translation only — no scale)
-        backgroundVideo.style.transform = `translate(${translateX}px, ${translateY}px)`;
+    // Apply transform to background video (preserve the zoom scale)
+    backgroundVideo.style.transform = `translate(${translateX}px, ${translateY}px) scale(1.06)`;
     });
 
 
