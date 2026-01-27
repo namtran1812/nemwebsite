@@ -1424,13 +1424,30 @@
 
                                     const revealClone = () => {
                                         try {
-                                            // Fade the clone in, then hide the original center after the frame
+                                            // Prepare short cross-fade: fade clone in while fading original out.
+                                            // Ensure both have transition styles for a smooth swap.
+                                            try {
+                                                closingCenterClone.style.transition = 'opacity 90ms linear';
+                                            } catch (e) {}
+                                            try {
+                                                // make sure original can be faded without losing layout
+                                                center.style.transition = center.style.transition || 'opacity 90ms linear';
+                                                center.style.willChange = (center.style.willChange || '') + ', opacity';
+                                            } catch (e) {}
+
                                             requestAnimationFrame(() => {
                                                 try { closingCenterClone.style.opacity = '1'; } catch(e){}
-                                                // After the fade, hide the original so the clone appears seamless
-                                                setTimeout(() => { try { center.style.visibility = 'hidden'; } catch(e){} }, 90);
+                                                try { center.style.opacity = '0'; } catch(e){}
+                                                // After the micro-fade, hide the original to free pointer events and avoid duplication
+                                                setTimeout(() => {
+                                                    try { center.style.visibility = 'hidden'; } catch(e){}
+                                                    try { center.style.opacity = ''; } catch(e){}
+                                                }, 140);
                                             });
-                                        } catch (e) { try { center.style.visibility = 'hidden'; } catch(e){} }
+                                        } catch (e) {
+                                            // worst-case: hide original after clone appended
+                                            try { center.style.visibility = 'hidden'; } catch(e){}
+                                        }
                                     };
 
                                     // Prefer decode() when available to avoid the load event race
