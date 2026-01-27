@@ -1386,7 +1386,9 @@
                                 if (avatarImg) {
                                     closingCenterClone = document.createElement('img');
                                     closingCenterClone.id = 'closingCenterClone';
-                                    closingCenterClone.src = avatarImg.src || 'images/homeimages/fullbodyiconsmile-transparent.png';
+                                    // Use currentSrc to prefer the resolved image resource (handles srcset/currentSrc)
+                                    const cloneSrc = avatarImg.currentSrc || avatarImg.src || 'images/homeimages/fullbodyiconsmile-transparent.png';
+                                    closingCenterClone.src = cloneSrc;
                                     const cs = closingCenterClone.style;
                                     cs.position = 'fixed';
                                     cs.left = rect.left + 'px';
@@ -1398,9 +1400,15 @@
                                     cs.boxSizing = 'border-box';
                                     cs.pointerEvents = 'none';
                                     cs.willChange = 'transform, opacity';
+                                    // Rendering hints to minimize paint flicker
+                                    cs.backfaceVisibility = 'hidden';
+                                    cs.webkitBackfaceVisibility = 'hidden';
+                                    cs.imageRendering = 'auto';
                                     cs.background = 'transparent';
                                     cs.transform = 'none';
                                     cs.zIndex = '2147483647';
+                                    cs.opacity = '0';
+                                    cs.transition = 'opacity 80ms linear';
                                     try {
                                         const srcCS = window.getComputedStyle(avatarImg);
                                         if (srcCS) {
@@ -1409,11 +1417,42 @@
                                             cs.boxShadow = srcCS.boxShadow || '';
                                         }
                                     } catch (ee) { /* ignore */ }
-                                    // Hide the original center visually while keeping it in the DOM
-                                        center.style.visibility = 'hidden';
-                                        // Disable interactivity while outro runs
-                                        try { center.style.pointerEvents = 'none'; } catch(e){}
-                                        document.body.appendChild(closingCenterClone);
+
+                                    // Append the clone but keep it invisible until it's fully decoded/loaded
+                                    // so we don't see a black paint while the browser loads the image.
+                                    document.body.appendChild(closingCenterClone);
+
+                                    const revealClone = () => {
+                                        try {
+                                            // Fade the clone in, then hide the original center after the frame
+                                            requestAnimationFrame(() => {
+                                                try { closingCenterClone.style.opacity = '1'; } catch(e){}
+                                                // After the fade, hide the original so the clone appears seamless
+                                                setTimeout(() => { try { center.style.visibility = 'hidden'; } catch(e){} }, 90);
+                                            });
+                                        } catch (e) { try { center.style.visibility = 'hidden'; } catch(e){} }
+                                    };
+
+                                    // Prefer decode() when available to avoid the load event race
+                                    try {
+                                        if (typeof closingCenterClone.decode === 'function') {
+                                            closingCenterClone.decode().then(revealClone).catch(revealClone);
+                                        } else if (closingCenterClone.complete) {
+                                            // already loaded from cache
+                                            revealClone();
+                                        } else {
+                                            closingCenterClone.addEventListener('load', revealClone, { once: true });
+                                            // safety fallback
+                                            setTimeout(revealClone, 250);
+                                        }
+                                    } catch (ee) {
+                                        // If decode/load fails, reveal immediately (still better than hiding original first)
+                                        revealClone();
+                                    }
+
+                                    // Disable interactivity while outro runs
+                                    try { center.style.pointerEvents = 'none'; } catch(e){}
+
                                     console.log('[about] created center img clone at', rect, 'src=', closingCenterClone.src);
                                 } else {
                                     console.log('[about] avatarImage not found; cannot create image clone');
@@ -1595,6 +1634,11 @@
         const aboutClosedSrc = 'images/aboutmeimages/fullbodyiconaboutclosed-transparent.png';
         const _preloadAboutOpen = new Image(); _preloadAboutOpen.src = aboutOpenSrc;
         const _preloadAboutClosed = new Image(); _preloadAboutClosed.src = aboutClosedSrc;
+        // Also preload the homepage smiling avatars to avoid reloads during outro
+        const homeSmileSrc = 'images/homeimages/fullbodyiconsmile-transparent.png';
+        const homeSmileClosedSrc = 'images/homeimages/fullbodyiconsmileclosed-transparent.png';
+        const _preloadHomeSmile = new Image(); _preloadHomeSmile.src = homeSmileSrc;
+        const _preloadHomeSmileClosed = new Image(); _preloadHomeSmileClosed.src = homeSmileClosedSrc;
     } catch (e) { console.debug('Preload failed:', e); }
 
     // pageRoot wrapper so fixed UI (audio control) stays outside grayscale
