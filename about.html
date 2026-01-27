@@ -1453,23 +1453,49 @@
                                             try { center.style.visibility = 'hidden'; } catch(e){}
                                         }
                                     };
+                                    // Prefer priming the raster via createImageBitmap when available (Chrome)
+                                    // otherwise fall back to decode/load as before.
+                                    (async () => {
+                                        try {
+                                            const persistent = document.getElementById('persistentAvatarImg');
+                                            if (persistent && window.createImageBitmap) {
+                                                // Try to fetch an ImageBitmap from the persistent avatar if available.
+                                                try {
+                                                    // If the persistent image is already loaded, draw to an offscreen canvas
+                                                    if (persistent.complete && persistent.naturalWidth) {
+                                                        const canvas = document.createElement('canvas');
+                                                        canvas.width = persistent.naturalWidth;
+                                                        canvas.height = persistent.naturalHeight;
+                                                        const ctx = canvas.getContext('2d');
+                                                        ctx.drawImage(persistent, 0, 0);
+                                                        const bitmap = await createImageBitmap(canvas);
+                                                        // use the bitmap to ensure the compositor has rastered pixels
+                                                        // then reveal the clone
+                                                        if (bitmap) { try { bitmap.close && bitmap.close(); } catch(_){}}
+                                                        revealClone();
+                                                        return;
+                                                    }
+                                                } catch (bmErr) {
+                                                    // ignore and fallback
+                                                    console.debug('createImageBitmap failed', bmErr);
+                                                }
+                                            }
 
-                                    // Prefer decode() when available to avoid the load event race
-                                    try {
-                                        if (typeof closingCenterClone.decode === 'function') {
-                                            closingCenterClone.decode().then(revealClone).catch(revealClone);
-                                        } else if (closingCenterClone.complete) {
-                                            // already loaded from cache
+                                            // fallback: use decode/load
+                                            if (typeof closingCenterClone.decode === 'function') {
+                                                await closingCenterClone.decode().catch(() => {});
+                                                revealClone();
+                                            } else if (closingCenterClone.complete) {
+                                                revealClone();
+                                            } else {
+                                                closingCenterClone.addEventListener('load', revealClone, { once: true });
+                                                setTimeout(revealClone, 250);
+                                            }
+                                        } catch (ee) {
+                                            // If all else fails, reveal immediately
                                             revealClone();
-                                        } else {
-                                            closingCenterClone.addEventListener('load', revealClone, { once: true });
-                                            // safety fallback
-                                            setTimeout(revealClone, 250);
                                         }
-                                    } catch (ee) {
-                                        // If decode/load fails, reveal immediately (still better than hiding original first)
-                                        revealClone();
-                                    }
+                                    })();
 
                                     // Disable interactivity while outro runs
                                     try { center.style.pointerEvents = 'none'; } catch(e){}
