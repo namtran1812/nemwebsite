@@ -912,6 +912,10 @@
     </style>
 </head>
 <body>
+    <!-- Persistent avatar overlay: shared visual anchor so page transitions can reuse the same image across pages -->
+    <div id="persistent-avatar" style="position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:11000; pointer-events:none;">
+        <img id="persistentAvatarImg" src="images/homeimages/fullbodyiconsmile-transparent.png" alt="avatar" style="width:120px;height:auto;display:block;border-radius:50%;filter:var(--avatar-filter, none);box-shadow:var(--avatar-shadow, none);">
+    </div>
     <!-- Foreground Background Video (sharp, slightly zoomed) -->
     <video class="background-video" autoplay muted loop playsinline>
         <source src="images/aboutmeimages/aboutmebackground.mp4?v=6" type="video/mp4">
@@ -1450,55 +1454,22 @@
                                         }
                                     };
 
-                                    // Prefer createImageBitmap when available to fully prime the raster
-                                    // This draws the image to an offscreen canvas so the browser has the pixels ready
-                                    const tryPrimeBitmap = () => {
-                                        if (window.createImageBitmap && avatarImg instanceof HTMLImageElement) {
-                                            try {
-                                                // createImageBitmap accepts an Image element and returns a bitmap promise
-                                                createImageBitmap(avatarImg).then(bitmap => {
-                                                    try {
-                                                        const off = document.createElement('canvas');
-                                                        off.width = bitmap.width || avatarImg.naturalWidth || 1;
-                                                        off.height = bitmap.height || avatarImg.naturalHeight || 1;
-                                                        const ctx = off.getContext('2d');
-                                                        if (ctx) ctx.drawImage(bitmap, 0, 0);
-                                                        if (bitmap.close) try { bitmap.close(); } catch(e){}
-                                                    } catch (ee) { /* ignore offscreen draw errors */ }
-                                                    // bitmap primed, reveal clone
-                                                    revealClone();
-                                                }).catch((err) => {
-                                                    // fall back to decode flow if createImageBitmap fails
-                                                    tryDecodeOrLoad();
-                                                });
-                                                return;
-                                            } catch (e) {
-                                                // fall through to decode fallback
-                                            }
-                                        }
-                                        // not supported - try decode/load fallback
-                                        tryDecodeOrLoad();
-                                    };
-
-                                    const tryDecodeOrLoad = () => {
-                                        try {
-                                            if (typeof closingCenterClone.decode === 'function') {
-                                                closingCenterClone.decode().then(revealClone).catch(revealClone);
-                                            } else if (closingCenterClone.complete) {
-                                                // already loaded from cache
-                                                revealClone();
-                                            } else {
-                                                closingCenterClone.addEventListener('load', revealClone, { once: true });
-                                                // safety fallback
-                                                setTimeout(revealClone, 250);
-                                            }
-                                        } catch (ee) {
-                                            // If decode/load fails, reveal immediately
+                                    // Prefer decode() when available to avoid the load event race
+                                    try {
+                                        if (typeof closingCenterClone.decode === 'function') {
+                                            closingCenterClone.decode().then(revealClone).catch(revealClone);
+                                        } else if (closingCenterClone.complete) {
+                                            // already loaded from cache
                                             revealClone();
+                                        } else {
+                                            closingCenterClone.addEventListener('load', revealClone, { once: true });
+                                            // safety fallback
+                                            setTimeout(revealClone, 250);
                                         }
-                                    };
-
-                                    tryPrimeBitmap();
+                                    } catch (ee) {
+                                        // If decode/load fails, reveal immediately (still better than hiding original first)
+                                        revealClone();
+                                    }
 
                                     // Disable interactivity while outro runs
                                     try { center.style.pointerEvents = 'none'; } catch(e){}
