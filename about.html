@@ -912,10 +912,6 @@
     </style>
 </head>
 <body>
-    <!-- Persistent avatar overlay: shared visual anchor so page transitions can reuse the same image across pages -->
-    <div id="persistent-avatar" style="position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:11000; pointer-events:none;">
-        <img id="persistentAvatarImg" src="images/homeimages/fullbodyiconsmile-transparent.png" alt="avatar" style="width:120px;height:auto;display:block;border-radius:50%;filter:var(--avatar-filter, none);box-shadow:var(--avatar-shadow, none);">
-    </div>
     <!-- Foreground Background Video (sharp, slightly zoomed) -->
     <video class="background-video" autoplay muted loop playsinline>
         <source src="images/aboutmeimages/aboutmebackground.mp4?v=6" type="video/mp4">
@@ -1391,8 +1387,7 @@
                                     closingCenterClone = document.createElement('img');
                                     closingCenterClone.id = 'closingCenterClone';
                                     // Use currentSrc to prefer the resolved image resource (handles srcset/currentSrc)
-                                    const cloneSrc = avatarImg.currentSrc || avatarImg.src || 'images/homeimages/fullbodyiconsmile-transparent.png';
-                                    closingCenterClone.src = cloneSrc;
+                                    closingCenterClone.src = avatarImg.currentSrc || avatarImg.src || 'images/homeimages/fullbodyiconsmile-transparent.png';
                                     const cs = closingCenterClone.style;
                                     cs.position = 'fixed';
                                     cs.left = rect.left + 'px';
@@ -1411,8 +1406,6 @@
                                     cs.background = 'transparent';
                                     cs.transform = 'none';
                                     cs.zIndex = '2147483647';
-                                    cs.opacity = '0';
-                                    cs.transition = 'opacity 80ms linear';
                                     try {
                                         const srcCS = window.getComputedStyle(avatarImg);
                                         if (srcCS) {
@@ -1421,85 +1414,11 @@
                                             cs.boxShadow = srcCS.boxShadow || '';
                                         }
                                     } catch (ee) { /* ignore */ }
-
-                                    // Append the clone but keep it invisible until it's fully decoded/loaded
-                                    // so we don't see a black paint while the browser loads the image.
-                                    document.body.appendChild(closingCenterClone);
-
-                                    const revealClone = () => {
-                                        try {
-                                            // Prepare short cross-fade: fade clone in while fading original out.
-                                            // Ensure both have transition styles for a smooth swap.
-                                            try {
-                                                closingCenterClone.style.transition = 'opacity 90ms linear';
-                                            } catch (e) {}
-                                            try {
-                                                // make sure original can be faded without losing layout
-                                                center.style.transition = center.style.transition || 'opacity 90ms linear';
-                                                center.style.willChange = (center.style.willChange || '') + ', opacity';
-                                            } catch (e) {}
-
-                                            requestAnimationFrame(() => {
-                                                try { closingCenterClone.style.opacity = '1'; } catch(e){}
-                                                try { center.style.opacity = '0'; } catch(e){}
-                                                // After the micro-fade, hide the original to free pointer events and avoid duplication
-                                                setTimeout(() => {
-                                                    try { center.style.visibility = 'hidden'; } catch(e){}
-                                                    try { center.style.opacity = ''; } catch(e){}
-                                                }, 140);
-                                            });
-                                        } catch (e) {
-                                            // worst-case: hide original after clone appended
-                                            try { center.style.visibility = 'hidden'; } catch(e){}
-                                        }
-                                    };
-                                    // Prefer priming the raster via createImageBitmap when available (Chrome)
-                                    // otherwise fall back to decode/load as before.
-                                    (async () => {
-                                        try {
-                                            const persistent = document.getElementById('persistentAvatarImg');
-                                            if (persistent && window.createImageBitmap) {
-                                                // Try to fetch an ImageBitmap from the persistent avatar if available.
-                                                try {
-                                                    // If the persistent image is already loaded, draw to an offscreen canvas
-                                                    if (persistent.complete && persistent.naturalWidth) {
-                                                        const canvas = document.createElement('canvas');
-                                                        canvas.width = persistent.naturalWidth;
-                                                        canvas.height = persistent.naturalHeight;
-                                                        const ctx = canvas.getContext('2d');
-                                                        ctx.drawImage(persistent, 0, 0);
-                                                        const bitmap = await createImageBitmap(canvas);
-                                                        // use the bitmap to ensure the compositor has rastered pixels
-                                                        // then reveal the clone
-                                                        if (bitmap) { try { bitmap.close && bitmap.close(); } catch(_){}}
-                                                        revealClone();
-                                                        return;
-                                                    }
-                                                } catch (bmErr) {
-                                                    // ignore and fallback
-                                                    console.debug('createImageBitmap failed', bmErr);
-                                                }
-                                            }
-
-                                            // fallback: use decode/load
-                                            if (typeof closingCenterClone.decode === 'function') {
-                                                await closingCenterClone.decode().catch(() => {});
-                                                revealClone();
-                                            } else if (closingCenterClone.complete) {
-                                                revealClone();
-                                            } else {
-                                                closingCenterClone.addEventListener('load', revealClone, { once: true });
-                                                setTimeout(revealClone, 250);
-                                            }
-                                        } catch (ee) {
-                                            // If all else fails, reveal immediately
-                                            revealClone();
-                                        }
-                                    })();
-
-                                    // Disable interactivity while outro runs
-                                    try { center.style.pointerEvents = 'none'; } catch(e){}
-
+                                    // Hide the original center visually while keeping it in the DOM
+                                        center.style.visibility = 'hidden';
+                                        // Disable interactivity while outro runs
+                                        try { center.style.pointerEvents = 'none'; } catch(e){}
+                                        document.body.appendChild(closingCenterClone);
                                     console.log('[about] created center img clone at', rect, 'src=', closingCenterClone.src);
                                 } else {
                                     console.log('[about] avatarImage not found; cannot create image clone');
