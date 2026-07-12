@@ -1,220 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Nam Tran's portfolio is currently being rebuilt." />
-  <meta name="theme-color" content="#070b08" />
-  <title>Nam Tran — Building</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coming Soon</title>
   <style>
-    :root {
-      color-scheme: dark;
-      --bg: #070b08;
-      --panel: #0b110d;
-      --panel-2: #0f1712;
-      --green: #8cff9b;
-      --green-soft: #56c86a;
-      --text: #d7f8dc;
-      --muted: #74927b;
-      --line: rgba(140, 255, 155, 0.18);
-      --shadow: rgba(0, 0, 0, 0.55);
+    * {
+      box-sizing: border-box;
     }
-
-    * { box-sizing: border-box; }
-
-    html { min-height: 100%; background: var(--bg); }
 
     body {
       margin: 0;
       min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: clamp(1rem, 4vw, 3rem);
-      overflow: hidden;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 50% 12%, rgba(67, 255, 98, 0.08), transparent 34rem),
-        linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
-        var(--bg);
-      background-size: auto, 32px 32px, 32px 32px, auto;
-      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    }
-
-    body::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background: repeating-linear-gradient(
-        to bottom,
-        transparent 0,
-        transparent 3px,
-        rgba(255,255,255,0.018) 4px
-      );
-      opacity: 0.55;
-    }
-
-    .terminal {
-      position: relative;
-      z-index: 1;
-      width: min(920px, 100%);
-      min-height: min(610px, calc(100vh - 2rem));
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(15, 23, 18, 0.98), rgba(7, 11, 8, 0.98));
-      box-shadow: 0 34px 90px var(--shadow), 0 0 50px rgba(76, 255, 108, 0.05);
-    }
-
-    .terminal-bar {
-      min-height: 48px;
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      display: flex;
       align-items: center;
-      padding: 0 1rem;
-      border-bottom: 1px solid var(--line);
-      background: rgba(255,255,255,0.025);
-    }
-
-    .controls { display: flex; gap: 0.5rem; }
-    .control { width: 11px; height: 11px; border-radius: 50%; opacity: 0.8; }
-    .control:nth-child(1) { background: #ff5f57; }
-    .control:nth-child(2) { background: #febc2e; }
-    .control:nth-child(3) { background: #28c840; }
-
-    .title {
-      color: var(--muted);
-      font-size: 0.72rem;
-      letter-spacing: 0.04em;
-      text-align: center;
-    }
-
-    .terminal-body {
-      display: flex;
-      flex-direction: column;
       justify-content: center;
-      padding: clamp(1.4rem, 5vw, 4rem);
-    }
-
-    .line {
-      margin: 0 0 0.9rem;
-      font-size: clamp(0.8rem, 1.6vw, 1rem);
-      line-height: 1.65;
-    }
-
-    .prompt { color: var(--green); }
-    .path { color: #6fb8ff; }
-    .command { color: var(--text); }
-    .muted { color: var(--muted); }
-
-    .status-block {
-      margin: clamp(1.4rem, 4vw, 2.7rem) 0;
-      padding-left: clamp(0.8rem, 2vw, 1.5rem);
-      border-left: 2px solid var(--green-soft);
-    }
-
-    h1 {
-      margin: 0;
-      color: var(--green);
-      font-size: clamp(2.1rem, 7vw, 5.3rem);
-      line-height: 1.02;
-      letter-spacing: -0.055em;
-      text-shadow: 0 0 24px rgba(140, 255, 155, 0.15);
-    }
-
-    .coming-soon {
-      margin: 0.8rem 0 0;
-      color: var(--text);
-      font-size: clamp(1rem, 2.5vw, 1.45rem);
-    }
-
-    .cursor {
-      display: inline-block;
-      width: 0.65ch;
-      height: 1.05em;
-      margin-left: 0.18em;
-      vertical-align: -0.1em;
-      background: var(--green);
-      animation: blink 1s steps(1, end) infinite;
-      box-shadow: 0 0 12px rgba(140, 255, 155, 0.5);
-    }
-
-    .terminal-footer {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      padding: 0.9rem 1rem;
-      border-top: 1px solid var(--line);
-      color: var(--muted);
-      background: rgba(255,255,255,0.018);
-      font-size: 0.72rem;
-    }
-
-    a {
-      color: var(--green);
-      text-decoration: none;
-    }
-
-    a:hover, a:focus-visible { text-decoration: underline; }
-
-    @keyframes blink { 50% { opacity: 0; } }
-
-    @media (max-width: 620px) {
-      body { padding: 0; }
-      .terminal {
-        min-height: 100vh;
-        border: 0;
-        border-radius: 0;
-      }
-      .terminal-bar { grid-template-columns: 1fr auto; }
-      .title { text-align: right; }
-      .terminal-footer { flex-direction: column; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .cursor { animation: none; }
+      background: #000;
+      color: #00ff66;
+      font-family: Menlo, Monaco, Consolas, monospace;
+      font-size: clamp(18px, 3vw, 28px);
+      line-height: 1.7;
     }
   </style>
 </head>
 <body>
-  <main class="terminal" aria-labelledby="page-title">
-    <header class="terminal-bar">
-      <div class="controls" aria-hidden="true">
-        <span class="control"></span>
-        <span class="control"></span>
-        <span class="control"></span>
-      </div>
-      <div class="title">nam@portfolio: ~/nemwebsite</div>
-      <div></div>
-    </header>
-
-    <section class="terminal-body">
-      <p class="line">
-        <span class="prompt">nam@portfolio</span>:<span class="path">~/nemwebsite</span>$
-        <span class="command">npm run build</span>
-      </p>
-      <p class="line muted">Initializing portfolio rebuild...</p>
-      <p class="line muted">Refactoring ideas, systems, and stories.</p>
-      <p class="line"><span class="prompt">✓</span> Build in progress</p>
-
-      <div class="status-block">
-        <h1 id="page-title">Currently building.</h1>
-        <p class="coming-soon">Coming soon.<span class="cursor" aria-hidden="true"></span></p>
-      </div>
-
-      <p class="line">
-        <span class="prompt">nam@portfolio</span>:<span class="path">~</span>$
-        <span class="command">echo "See you soon."</span>
-      </p>
-    </section>
-
-    <footer class="terminal-footer">
-      <span>status: 200 · rebuilding</span>
-      <a href="mailto:hoangnamtran18122005@gmail.com">contact@namtran</a>
-    </footer>
+  <main>
+    <div>&gt; Currently building.</div>
+    <div>&gt; Coming soon.</div>
   </main>
 </body>
 </html>
