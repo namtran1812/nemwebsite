@@ -1,8 +1,8 @@
 const PORTFOLIO_STARS = [
   {
     id: "experience",
-    label: "Experience",
-    href: "#experience",
+    label: "about",
+    href: "#creative",
     x: 56,
     y: 16,
     brightness: 1,
@@ -12,8 +12,8 @@ const PORTFOLIO_STARS = [
   },
   {
     id: "projects",
-    label: "Projects",
-    href: "#projects",
+    label: "engineering",
+    href: "#engineering",
     x: 57.5,
     y: 35,
     brightness: 0.72,
@@ -23,8 +23,8 @@ const PORTFOLIO_STARS = [
   },
   {
     id: "about",
-    label: "About",
-    href: "#about",
+    label: "creative",
+    href: "#creative",
     x: 65,
     y: 25,
     brightness: 0.86,
@@ -34,7 +34,7 @@ const PORTFOLIO_STARS = [
   },
   {
     id: "research",
-    label: "Research",
+    label: "research",
     href: "#research",
     x: 73,
     y: 13,
@@ -45,8 +45,8 @@ const PORTFOLIO_STARS = [
   },
   {
     id: "leadership",
-    label: "Leadership",
-    href: "#leadership",
+    label: "community",
+    href: "#community",
     x: 71.5,
     y: 36,
     brightness: 0.78,
