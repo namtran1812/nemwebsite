@@ -1,36 +1,31 @@
 (() => {
   const landing = document.querySelector(".landing");
-
   if (!landing) return;
 
-  let dim = landing.querySelector(".constellation-dim");
+  const targets = document.querySelectorAll(
+    ".portfolio-star, .constellation-line"
+  );
 
-  if (!dim) {
-    dim = document.createElement("div");
-    dim.className = "constellation-dim";
-    landing.insertBefore(dim, landing.firstChild);
-  }
+  let activeTargets = 0;
 
   const activate = () => {
+    activeTargets += 1;
     landing.classList.add("constellation-active");
   };
 
   const deactivate = () => {
-    landing.classList.remove("constellation-active");
+    activeTargets = Math.max(0, activeTargets - 1);
+
+    if (activeTargets === 0) {
+      landing.classList.remove("constellation-active");
+    }
   };
 
-  const bindConstellation = () => {
-    const targets = document.querySelectorAll(
-      ".portfolio-star, .constellation-line"
-    );
+  targets.forEach((target) => {
+    target.addEventListener("pointerenter", activate);
+    target.addEventListener("pointerleave", deactivate);
 
-    targets.forEach((target) => {
-      target.addEventListener("pointerenter", activate);
-      target.addEventListener("pointerleave", deactivate);
-    });
-
-    console.log("Constellation hover targets:", targets.length);
-  };
-
-  bindConstellation();
+    target.addEventListener("focus", activate);
+    target.addEventListener("blur", deactivate);
+  });
 })();
