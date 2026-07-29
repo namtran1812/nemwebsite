@@ -1,0 +1,140 @@
+.constellation-dim {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+
+  background: rgba(2, 6, 18, 0);
+  pointer-events: none;
+
+  transition: background 500ms ease;
+}
+
+.landing.constellation-active .constellation-dim {
+  background: rgba(2, 6, 18, 0.48);
+}
+
+/* Figure levitation */
+
+@keyframes constellationLevitate {
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  50% {
+    transform: translateX(-50%) translateY(-32px);
+  }
+}
+
+.landing.constellation-active .figure {
+  z-index: 4;
+  animation: constellationLevitate 3.2s ease-in-out infinite;
+  filter: brightness(1.12) contrast(1.02);
+}
+
+.landing.constellation-active .foot-shadow {
+  opacity: 0.4;
+  transform: rotate(-5deg) scale(0.82);
+
+  transition:
+    opacity 500ms ease,
+    transform 500ms ease;
+}
+
+/* Static portfolio labels */
+
+.star-label {
+  display: none !important;
+}
+
+.static-star-label {
+  position: absolute;
+
+  left: calc(var(--x) * 1%);
+  top: calc(var(--y) * 1%);
+
+  transform: translate(-50%, -24px);
+
+  font-family:
+    "Bodoni 72",
+    Didot,
+    Baskerville,
+    "Iowan Old Style",
+    Georgia,
+    serif;
+
+  font-style: italic;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.015em;
+  text-transform: lowercase;
+  white-space: nowrap;
+
+  color: rgba(246, 248, 255, 0.94);
+
+  text-shadow:
+    0 0 6px rgba(215, 232, 255, 0.35),
+    0 1px 4px rgba(0, 0, 0, 0.7);
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 450ms ease;
+}
+
+.landing.constellation-active .static-star-label {
+  opacity: 1;
+}
+
+.static-star-label[data-label="projects"],
+.static-star-label[data-label="leadership"] {
+  transform: translate(-50%, 18px);
+}
+
+/* Deep áo dài blue radiance */
+
+@keyframes deepBlueRadiance {
+  0%,
+  100% {
+    stroke: rgba(42, 105, 190, 1);
+
+    filter:
+      drop-shadow(0 0 3px rgba(100, 175, 245, 0.95))
+      drop-shadow(0 0 8px rgba(55, 135, 225, 0.75))
+      drop-shadow(0 0 17px rgba(30, 95, 200, 0.50));
+  }
+
+  50% {
+    stroke: rgba(72, 145, 225, 1);
+
+    filter:
+      drop-shadow(0 0 4px rgba(225, 248, 255, 1))
+      drop-shadow(0 0 10px rgba(125, 205, 255, 1))
+      drop-shadow(0 0 21px rgba(60, 155, 245, 0.90))
+      drop-shadow(0 0 36px rgba(25, 100, 220, 0.65));
+  }
+}
+
+.landing.constellation-active .constellation-line {
+  stroke: rgba(42, 110, 200, 1);
+  stroke-width: 1.7px;
+  animation: deepBlueRadiance 1.7s ease-in-out infinite;
+}
+
+.landing.constellation-active .portfolio-star {
+  box-shadow:
+    0 0 4px rgba(245, 253, 255, 1),
+    0 0 10px rgba(155, 220, 255, 1),
+    0 0 22px rgba(70, 160, 245, 0.95),
+    0 0 40px rgba(35, 110, 220, 0.70),
+    0 0 62px rgba(20, 75, 180, 0.38);
+}
+
+.landing.constellation-active .portfolio-star::before,
+.landing.constellation-active .portfolio-star::after {
+  filter:
+    brightness(1.7)
+    drop-shadow(0 0 4px rgba(220, 245, 255, 1))
+    drop-shadow(0 0 10px rgba(110, 195, 255, 1))
+    drop-shadow(0 0 20px rgba(45, 135, 235, 0.85))
+    drop-shadow(0 0 32px rgba(25, 90, 205, 0.50));
+}

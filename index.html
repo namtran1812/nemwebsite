@@ -18,6 +18,7 @@
       position: relative;
       width: 100vw;
       height: 100vh;
+      overflow: hidden;
 
       background-image: url("./public/background-full.png");
       background-size: cover;
@@ -26,26 +27,19 @@
     }
 
     .figure {
-      --float-distance: 4px;
-      --sway-angle: 0.25deg;
-      --movement-duration: 5s;
-
       position: absolute;
       left: 41.5%;
       bottom: -3.5%;
       height: 68vh;
       width: auto;
-
       z-index: 2;
 
+      transform: translateX(-50%);
       transform-origin: bottom center;
-      animation: namMove var(--movement-duration) ease-in-out infinite;
-      will-change: transform;
     }
 
     .foot-shadow {
       position: absolute;
-
       left: 38.5%;
       bottom: 0.5%;
 
@@ -63,27 +57,40 @@
       pointer-events: none;
     }
 
-    @keyframes namMove {
-      0%,
-      100% {
-        transform:
-          translateX(-50%)
-          translateY(0)
-          rotate(calc(-1 * var(--sway-angle)));
-      }
+    .starlight-wash {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
 
-      50% {
-        transform:
-          translateX(-50%)
-          translateY(calc(-1 * var(--float-distance)))
-          rotate(var(--sway-angle));
-      }
+      opacity: 0;
+
+      background:
+        radial-gradient(
+          ellipse 18% 30% at 42% 54%,
+          rgba(225, 238, 255, 0.18),
+          rgba(180, 215, 255, 0.10) 38%,
+          transparent 72%
+        );
+
+      mix-blend-mode: screen;
+      filter: blur(10px);
+      transition: opacity 800ms ease;
+    }
+
+    .landing.constellation-active .starlight-wash {
+      opacity: 1;
     }
   </style>
+
+  <link rel="stylesheet" href="./css/ambient-stars.css" />
+  <link rel="stylesheet" href="./css/constellation-interaction.css" />
 </head>
 
 <body>
   <main class="landing">
+    <div class="constellation-dim"></div>
+    <div class="starlight-wash"></div>
     <div class="foot-shadow"></div>
 
     <img
@@ -92,5 +99,10 @@
       alt="Nam standing on the balcony"
     />
   </main>
+
+  <script src="./js/portfolio-stars.js"></script>
+  <script src="./js/static-star-labels.js"></script>
+  <script src="./js/constellation-interaction.js"></script>
+  <script src="./js/ambient-stars.js"></script>
 </body>
 </html>
