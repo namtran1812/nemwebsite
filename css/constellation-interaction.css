@@ -1,3 +1,7 @@
+/* =========================================================
+   DIMMING
+   ========================================================= */
+
 .constellation-dim {
   position: absolute;
   inset: 0;
@@ -14,7 +18,43 @@
 }
 
 
-/* ---------- figure ---------- */
+/* =========================================================
+   FOOT SHADOW
+   ========================================================= */
+
+.foot-shadow {
+  position: absolute;
+
+  left: 30%;
+  bottom: -0.15%;
+
+  width: 300px;
+  height: 24px;
+
+  z-index: 1;
+  pointer-events: none;
+
+  background: rgba(0, 0, 0, 0.62);
+  border-radius: 50%;
+  filter: blur(10px);
+
+  transform: rotate(-3deg);
+  transform-origin: right center;
+
+  transition:
+    opacity 500ms ease,
+    transform 500ms ease;
+}
+
+.landing.constellation-active .foot-shadow {
+  opacity: 0.48;
+  transform: rotate(-3deg) scale(0.92);
+}
+
+
+/* =========================================================
+   FIGURE LEVITATION
+   ========================================================= */
 
 @keyframes constellationLevitate {
   0%,
@@ -36,31 +76,34 @@
     ease-in-out
     infinite;
 
-  /* illuminated, not self-glowing */
   filter:
     brightness(1.16)
     saturate(1.04)
     contrast(1.02);
 }
 
-.landing.constellation-active .foot-shadow {
-  opacity: 0.4;
-  transform: rotate(-5deg) scale(0.82);
 
-  transition:
-    opacity 500ms ease,
-    transform 500ms ease;
-}
-
-
-/* ---------- starlight ---------- */
+/* =========================================================
+   STARLIGHT ON FIGURE
+   ========================================================= */
 
 .starlight-wash {
-  z-index: 4 !important;
+  position: absolute;
+  inset: 0;
+
+  z-index: 4;
+  pointer-events: none;
+
+  opacity: 0;
+
+  mix-blend-mode: screen;
+  filter: blur(7px);
+
+  transition: opacity 700ms ease;
 }
 
 .landing.constellation-active .starlight-wash {
-  opacity: 1 !important;
+  opacity: 1;
 
   background:
     radial-gradient(
@@ -77,14 +120,13 @@
       rgba(130, 195, 255, 0.16) 48%,
       rgba(65, 135, 225, 0.08) 58%,
       transparent 69%
-    ) !important;
-
-  mix-blend-mode: screen;
-  filter: blur(7px);
+    );
 }
 
 
-/* ---------- labels ---------- */
+/* =========================================================
+   STATIC LABELS
+   ========================================================= */
 
 .static-star-label {
   position: absolute;
@@ -132,42 +174,71 @@
 }
 
 
-/* ---------- active N ---------- */
+/* =========================================================
+   BLUE-FIRE CONSTELLATION
+   ========================================================= */
 
 @keyframes deepBlueRadiance {
   0%,
   100% {
-    stroke: rgb(36, 96, 190);
+    stroke: rgb(40, 100, 205);
 
     filter:
-      drop-shadow(0 0 4px rgba(150, 205, 255, 0.9))
-      drop-shadow(0 0 10px rgba(65, 145, 235, 0.75))
-      drop-shadow(0 0 20px rgba(25, 85, 205, 0.55));
+      drop-shadow(0 0 3px rgba(225, 248, 255, 1))
+      drop-shadow(0 0 8px rgba(125, 200, 255, 0.95))
+      drop-shadow(0 0 16px rgba(55, 145, 250, 0.85))
+      drop-shadow(0 0 30px rgba(25, 90, 220, 0.65))
+      drop-shadow(0 0 48px rgba(15, 55, 170, 0.40));
   }
 
-  50% {
-    stroke: rgb(65, 140, 225);
+  35% {
+    stroke: rgb(90, 170, 245);
 
     filter:
-      drop-shadow(0 0 4px rgba(225, 248, 255, 1))
-      drop-shadow(0 0 11px rgba(120, 200, 255, 1))
-      drop-shadow(0 0 23px rgba(50, 145, 245, 0.9))
-      drop-shadow(0 0 38px rgba(20, 85, 210, 0.65));
+      drop-shadow(0 0 4px rgba(255, 255, 255, 1))
+      drop-shadow(0 0 11px rgba(185, 235, 255, 1))
+      drop-shadow(0 0 23px rgba(75, 175, 255, 1))
+      drop-shadow(0 0 42px rgba(35, 115, 245, 0.9))
+      drop-shadow(0 0 65px rgba(15, 70, 210, 0.65));
+  }
+
+  52% {
+    stroke: rgb(155, 215, 255);
+
+    filter:
+      drop-shadow(0 0 5px rgba(255, 255, 255, 1))
+      drop-shadow(0 0 14px rgba(210, 245, 255, 1))
+      drop-shadow(0 0 28px rgba(95, 195, 255, 1))
+      drop-shadow(0 0 50px rgba(40, 130, 255, 1))
+      drop-shadow(0 0 78px rgba(15, 75, 220, 0.75));
+  }
+
+  72% {
+    stroke: rgb(60, 135, 230);
+
+    filter:
+      drop-shadow(0 0 4px rgba(240, 252, 255, 1))
+      drop-shadow(0 0 9px rgba(155, 220, 255, 1))
+      drop-shadow(0 0 19px rgba(65, 165, 255, 0.95))
+      drop-shadow(0 0 35px rgba(25, 105, 240, 0.82))
+      drop-shadow(0 0 55px rgba(15, 65, 200, 0.55));
   }
 }
 
 .landing.constellation-active .constellation-line {
-  stroke-width: 1.8px;
+  stroke-width: 2.1px;
 
   animation:
     deepBlueRadiance
-    1.7s
+    1.35s
     ease-in-out
     infinite;
 }
 
 
-/* ---------- active stars ---------- */
+/* =========================================================
+   ACTIVE STAR RADIANCE
+   ========================================================= */
 
 @keyframes activeStarRadiance {
   0%,

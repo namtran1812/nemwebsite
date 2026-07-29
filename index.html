@@ -37,50 +37,6 @@
       transform: translateX(-50%);
       transform-origin: bottom center;
     }
-
-    .foot-shadow {
-      position: absolute;
-      left: 38.5%;
-      bottom: 0.5%;
-
-      width: 190px;
-      height: 18px;
-
-      background: rgba(0, 0, 0, 0.72);
-      border-radius: 50%;
-      filter: blur(9px);
-
-      transform: rotate(-5deg);
-      transform-origin: right center;
-
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    .starlight-wash {
-      position: absolute;
-      inset: 0;
-      z-index: 3;
-      pointer-events: none;
-
-      opacity: 0;
-
-      background:
-        radial-gradient(
-          ellipse 18% 30% at 42% 54%,
-          rgba(225, 238, 255, 0.18),
-          rgba(180, 215, 255, 0.10) 38%,
-          transparent 72%
-        );
-
-      mix-blend-mode: screen;
-      filter: blur(10px);
-      transition: opacity 800ms ease;
-    }
-
-    .landing.constellation-active .starlight-wash {
-      opacity: 1;
-    }
   </style>
 
   <link rel="stylesheet" href="./css/ambient-stars.css" />
