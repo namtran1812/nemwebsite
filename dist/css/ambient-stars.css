@@ -1,0 +1,102 @@
+.ambient-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient-star {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+
+  width: var(--size);
+  height: var(--size);
+
+  background: white;
+  border-radius: 50%;
+
+  opacity: 0.28;
+
+  box-shadow:
+    0 0 3px rgba(255, 255, 255, 0.8),
+    0 0 7px rgba(190, 220, 255, 0.35);
+
+  animation:
+    ambientTwinkle
+    var(--duration)
+    ease-in-out
+    var(--delay)
+    infinite;
+}
+
+/* Small celestial rays */
+.ambient-star::before,
+.ambient-star::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+
+  transform: translate(-50%, -50%);
+
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(230, 242, 255, 0.8),
+    transparent
+  );
+}
+
+.ambient-star::before {
+  width: 1px;
+  height: calc(var(--size) * 3.5);
+}
+
+.ambient-star::after {
+  width: calc(var(--size) * 2.7);
+  height: 1px;
+
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(230, 242, 255, 0.7),
+    transparent
+  );
+}
+
+@keyframes ambientTwinkle {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+
+  35% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.35);
+
+    box-shadow:
+      0 0 4px rgba(255, 255, 255, 1),
+      0 0 9px rgba(210, 232, 255, 0.75),
+      0 0 15px rgba(155, 205, 255, 0.35);
+  }
+
+  65% {
+    opacity: 0.4;
+    transform: scale(0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-star {
+    animation: none;
+    opacity: 0.5;
+  }
+}
